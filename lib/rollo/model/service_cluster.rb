@@ -19,7 +19,7 @@ module Rollo
 
       def services
         get_ecs_service_arns
-            .collect {|arn| Rolo::Service.new(@ecs_cluster_name, arn, @region)}
+            .collect {|arn| Service.new(@ecs_cluster_name, arn, @region)}
             .select {|service| service.is_replica? }
       end
 

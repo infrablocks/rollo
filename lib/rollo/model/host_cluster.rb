@@ -37,12 +37,12 @@ module Rollo
 
       def scaling_activities
         reload
-        @asg.activities.collect {|a| Rolo::ScalingActivity.new(a)}
+        @asg.activities.collect {|a| ScalingActivity.new(a)}
       end
 
       def hosts
         reload
-        @asg.instances.collect {|h| Rolo::Host.new(h, @region)}
+        @asg.instances.collect {|h| Host.new(h)}
       end
 
       def increase_capacity_by(capacity_delta, &block)
@@ -98,12 +98,12 @@ module Rollo
       end
 
       def record_latest_scaling_activity
-        @latest_scaling_activity = scaling_activities.first
+        @last_scaling_activity = scaling_activities.first
       end
 
       def has_started_changing_capacity?
         scaling_activities
-            .select {|a| a.started_after?(@latest_scaling_activity)}
+            .select {|a| a.started_after_completion_of?(@last_scaling_activity)}
             .size > 0
       end
 

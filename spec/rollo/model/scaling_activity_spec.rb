@@ -52,7 +52,7 @@ RSpec.describe Rollo::Model::ScalingActivity do
         activity_2_id, region: region, data: {start_time: activity_2_start_time})
     scaling_activity_2 = Rollo::Model::ScalingActivity.new(activity_2)
 
-    expect(scaling_activity_2.started_after?(scaling_activity_1))
+    expect(scaling_activity_2.started_after_completion_of?(scaling_activity_1))
         .to(be(true))
   end
 
@@ -71,7 +71,7 @@ RSpec.describe Rollo::Model::ScalingActivity do
         activity_2_id, region: region, data: {start_time: activity_2_start_time})
     scaling_activity_2 = Rollo::Model::ScalingActivity.new(activity_2)
 
-    expect(scaling_activity_2.started_after?(scaling_activity_1))
+    expect(scaling_activity_2.started_after_completion_of?(scaling_activity_1))
         .to(be(false))
   end
 
@@ -89,7 +89,7 @@ RSpec.describe Rollo::Model::ScalingActivity do
         activity_2_id, region: region, data: {start_time: nil})
     scaling_activity_2 = Rollo::Model::ScalingActivity.new(activity_2)
 
-    expect(scaling_activity_2.started_after?(scaling_activity_1))
+    expect(scaling_activity_2.started_after_completion_of?(scaling_activity_1))
         .to(be(false))
   end
 
@@ -107,7 +107,7 @@ RSpec.describe Rollo::Model::ScalingActivity do
         activity_2_id, region: region, data: {start_time: activity_2_start_time})
     scaling_activity_2 = Rollo::Model::ScalingActivity.new(activity_2)
 
-    expect(scaling_activity_2.started_after?(scaling_activity_1))
+    expect(scaling_activity_2.started_after_completion_of?(scaling_activity_1))
         .to(be(false))
   end
 
@@ -127,7 +127,7 @@ RSpec.describe Rollo::Model::ScalingActivity do
         activity_2_id, region: region, data: {start_time: activity_2_start_time})
     scaling_activity_2 = Rollo::Model::ScalingActivity.new(activity_2)
 
-    expect(scaling_activity_2.started_after?(scaling_activity_1))
+    expect(scaling_activity_2.started_after_completion_of?(scaling_activity_1))
         .to(be(false))
   end
 

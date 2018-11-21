@@ -1,7 +1,7 @@
 module Rollo
   module Model
     class Host
-      def initialize(instance, region)
+      def initialize(instance)
         @instance = instance
       end
 

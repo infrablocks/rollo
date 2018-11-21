@@ -6,17 +6,22 @@ module Rollo
   module Model
     class Service
       def initialize(
-          ecs_cluster_name, ecs_service_arn, region, ecs_resource = nil)
+          ecs_cluster_name, ecs_service_arn, region,
+              ecs_resource = nil, waiter = nil)
         @ecs_cluster_name = ecs_cluster_name
         @ecs_service_arn = ecs_service_arn
         @ecs_resource = ecs_resource || Aws::ECS::Resource.new(region: region)
         reload
 
-        @waiter = Wait.new(attempts: 300, timeout: 30, delay: 5)
+        @waiter = waiter || Wait.new(attempts: 300, timeout: 30, delay: 5)
       end
 
       def name
         @ecs_service.service_name
+      end
+
+      def instance
+        @ecs_service
       end
 
       def reload
@@ -27,18 +32,26 @@ module Rollo
         @ecs_service.scheduling_strategy == 'REPLICA'
       end
 
+      def running_count
+        reload
+        @ecs_service.running_count
+      end
+
       def desired_count
         reload
         @ecs_service.desired_count
       end
 
       def desired_count=(count)
-        reload
         @ecs_resource.client
             .update_service(
                 cluster: @ecs_cluster_name,
                 service: @ecs_service_arn,
                 desired_count: count)
+      end
+
+      def has_desired_count?
+        running_count == desired_count
       end
 
       def increase_instance_count_by(count_delta, &block)
@@ -72,11 +85,6 @@ module Rollo
               .try_respond_with(:waiting_for_health, attempt) if block
           has_desired_count?
         end
-      end
-
-      def has_desired_count?
-        reload
-        @ecs_service.running_count == desired_count
       end
 
       private

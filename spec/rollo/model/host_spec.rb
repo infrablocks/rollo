@@ -8,7 +8,7 @@ RSpec.describe Rollo::Model::Host do
     instance = Aws::AutoScaling::Instance.new(
         group_name, instance_id, region: region)
 
-    host = Rollo::Model::Host.new(instance, region)
+    host = Rollo::Model::Host.new(instance)
 
     expect(host.id).to(eq(instance_id))
   end
@@ -21,7 +21,7 @@ RSpec.describe Rollo::Model::Host do
         group_name, instance_id, region: region)
     allow(instance).to(receive(:terminate))
 
-    host = Rollo::Model::Host.new(instance, region)
+    host = Rollo::Model::Host.new(instance)
     host.terminate
 
     expect(instance)
@@ -37,7 +37,7 @@ RSpec.describe Rollo::Model::Host do
         group_name, instance_id,
         region: region, data: {lifecycle_state: 'InService'})
 
-    host = Rollo::Model::Host.new(instance, region)
+    host = Rollo::Model::Host.new(instance)
 
     expect(host.is_in_service?).to(be(true))
   end
@@ -50,7 +50,7 @@ RSpec.describe Rollo::Model::Host do
         group_name, instance_id,
         region: region, data: {lifecycle_state: 'Terminated'})
 
-    host = Rollo::Model::Host.new(instance, region)
+    host = Rollo::Model::Host.new(instance)
 
     expect(host.is_in_service?).to(be(false))
   end
@@ -63,7 +63,7 @@ RSpec.describe Rollo::Model::Host do
         group_name, instance_id,
         region: region, data: {health_status: 'Healthy'})
 
-    host = Rollo::Model::Host.new(instance, region)
+    host = Rollo::Model::Host.new(instance)
 
     expect(host.is_healthy?).to(be(true))
   end
@@ -76,7 +76,7 @@ RSpec.describe Rollo::Model::Host do
         group_name, instance_id,
         region: region, data: {health_status: 'Unhealthy'})
 
-    host = Rollo::Model::Host.new(instance, region)
+    host = Rollo::Model::Host.new(instance)
 
     expect(host.is_healthy?).to(be(false))
   end

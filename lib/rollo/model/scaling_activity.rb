@@ -17,7 +17,7 @@ module Rollo
         @activity.end_time
       end
 
-      def started_after?(other)
+      def started_after_completion_of?(other)
         self.id != other.id &&
             !self.start_time.nil? &&
             !other.end_time.nil? &&
