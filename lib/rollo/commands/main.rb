@@ -60,7 +60,7 @@ module Rollo
         puts "-> Host cluster desired capacity increased, continuing..."
 
         puts("-> Increasing service instance counts by #{batch_size}...")
-        service_cluster.with_services do |on|
+        service_cluster.with_replica_services do |on|
           on.start do |services|
             puts(
                 "--> Service cluster contains services:" +
@@ -109,7 +109,7 @@ module Rollo
                       "(attempt #{attempt})")
             end
           end
-          service_cluster.with_services do |on|
+          service_cluster.with_replica_services do |on|
             on.each_service do |service|
               service.wait_for_service_health do |on|
                 on.waiting_for_health do |attempt|
@@ -151,7 +151,7 @@ module Rollo
                     "(attempt #{attempt})...")
           end
         end
-        service_cluster.with_services do |on|
+        service_cluster.with_replica_services do |on|
           on.each_service do |service|
             service.wait_for_service_health do |on|
               on.waiting_for_health do |attempt|
@@ -165,7 +165,7 @@ module Rollo
         puts "-> Host cluster desired capacity decreased, continuing..."
 
         puts("-> Decreasing service instance counts by #{batch_size}...")
-        service_cluster.with_services do |on|
+        service_cluster.with_replica_services do |on|
           on.each_service do |service|
             puts(
                 "--> Decreasing instance count by #{batch_size} " +
