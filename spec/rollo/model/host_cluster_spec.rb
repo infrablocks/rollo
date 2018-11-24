@@ -6,6 +6,7 @@ def auto_scaling_group_data(asg_name, overrides_and_extras = {})
       auto_scaling_group_name: asg_name,
       min_size: 3,
       max_size: 9,
+      desired_capacity: 6,
       default_cooldown: 300,
       availability_zones: ['eu-west-1a', 'eu-west-1b'],
       health_check_type: 'EC2',
@@ -23,9 +24,25 @@ def activity_data(asg_name, overrides_and_extras = {})
   }.merge(overrides_and_extras)
 end
 
+def instance_data(overrides_and_extras = {})
+  {
+      instance_id: "i-abcdef123456789#{Random.rand(100)}",
+      availability_zone: 'eu-west-1a',
+      lifecycle_state: 'InService',
+      health_status: 'Healthy',
+      protected_from_scale_in: false
+  }.merge(overrides_and_extras)
+end
+
 RSpec::Matchers.define :an_activity_with_id do |id|
   match do |actual|
     actual.class == Aws::AutoScaling::Activity && actual.id == id
+  end
+end
+
+RSpec::Matchers.define :an_instance_with_id do |id|
+  match do |actual|
+    actual.class == Aws::AutoScaling::Instance && actual.id == id
   end
 end
 
@@ -81,15 +98,6 @@ RSpec.describe Rollo::Model::HostCluster do
 
       as_client = Aws::AutoScaling::Client.new(stub_responses: true)
       as_client.stub_responses(
-          :describe_auto_scaling_groups,
-          [
-              {
-                  auto_scaling_groups: [
-                      auto_scaling_group_data(asg_name, desired_capacity: 6)
-                  ]
-              }
-          ])
-      as_client.stub_responses(
           :describe_scaling_activities,
           [
               {
@@ -128,6 +136,119 @@ RSpec.describe Rollo::Model::HostCluster do
           ]))
       expect(scaling_activities)
           .to(eq([scaling_activity_1, scaling_activity_2]))
+    end
+
+    it 'exposes the hosts in the underlying auto scaling group' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          instances: [
+                              instance_data(instance_id: instance_1_id),
+                              instance_data(instance_id: instance_2_id),
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      host_1 = double('host 1')
+      host_2 = double('host 2')
+
+      allow(Rollo::Model::Host)
+          .to(receive(:new)
+              .with(an_instance_with_id(instance_1_id))
+              .and_return(host_1))
+      allow(Rollo::Model::Host)
+          .to(receive(:new)
+              .with(an_instance_with_id(instance_2_id))
+              .and_return(host_2))
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource)
+
+      hosts = host_cluster.hosts
+
+      expect(as_client.api_requests
+          .select {|r| r[:operation_name] == :describe_auto_scaling_groups}
+          .map {|r| r[:params] })
+          .to(eq([
+              {auto_scaling_group_names: [asg_name]},
+          ]))
+      expect(hosts).to(eq([host_1, host_2]))
+    end
+  end
+
+  context '#reload' do
+    it 'reloads the underlying auto scaling group' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name, desired_capacity: 6)
+                  ]
+              },
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name, desired_capacity: 9)
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource)
+
+      initial_desired_capacity = host_cluster.desired_capacity
+      host_cluster.reload
+      updated_desired_capacity = host_cluster.desired_capacity
+
+      expect(as_client.api_requests
+          .select {|r| r[:operation_name] == :describe_auto_scaling_groups}
+          .map { |r| r[:params] })
+          .to(eq([
+              {auto_scaling_group_names: [asg_name]},
+              {auto_scaling_group_names: [asg_name]}
+          ]))
+      expect(initial_desired_capacity).to(eq(6))
+      expect(updated_desired_capacity).to(eq(9))
+    end
+  end
+
+  context '#desired_capacity=' do
+    it 'sets the desired capacity of the underlying auto scaling group' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource)
+
+      host_cluster.desired_capacity = 6
+
+      expect(as_client.api_requests
+          .select {|r| r[:operation_name] == :set_desired_capacity}
+          .first[:params])
+          .to(eq(
+              auto_scaling_group_name: asg_name,
+              desired_capacity: 6))
     end
   end
 end

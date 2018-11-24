@@ -18,7 +18,7 @@ module Rollo
         @waiter = waiter || Wait.new(attempts: 300, timeout: 30, delay: 5)
       end
 
-      def reload
+      def reload # ✔︎
         @asg.reload
       end
 
@@ -30,7 +30,7 @@ module Rollo
         @asg.desired_capacity
       end
 
-      def desired_capacity=(capacity)
+      def desired_capacity=(capacity) # ✔︎
         @asg.set_desired_capacity({desired_capacity: capacity})
       end
 
@@ -38,7 +38,7 @@ module Rollo
         @asg.activities.collect {|a| ScalingActivity.new(a)}
       end
 
-      def hosts
+      def hosts # ✔︎
         @asg.instances.collect {|h| Host.new(h)}
       end
 
