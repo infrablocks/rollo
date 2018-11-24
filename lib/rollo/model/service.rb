@@ -16,33 +16,31 @@ module Rollo
         @waiter = waiter || Wait.new(attempts: 300, timeout: 30, delay: 5)
       end
 
-      def name
+      def name # ✔︎
         @ecs_service.service_name
       end
 
-      def instance
+      def instance # ✔︎
         @ecs_service
       end
 
-      def reload
+      def reload # ✔︎
         @ecs_service = get_ecs_service
       end
 
-      def is_replica?
+      def is_replica? # ✔︎
         @ecs_service.scheduling_strategy == 'REPLICA'
       end
 
-      def running_count
-        reload
+      def running_count # ✔︎
         @ecs_service.running_count
       end
 
-      def desired_count
-        reload
+      def desired_count # ✔︎
         @ecs_service.desired_count
       end
 
-      def desired_count=(count)
+      def desired_count=(count) # ✔︎
         @ecs_resource.client
             .update_service(
                 cluster: @ecs_cluster_name,
@@ -50,7 +48,7 @@ module Rollo
                 desired_count: count)
       end
 
-      def has_desired_count?
+      def has_desired_count? # ✔︎
         running_count == desired_count
       end
 
@@ -74,13 +72,14 @@ module Rollo
         ensure_instance_count(decreased, &block)
       end
 
-      def ensure_instance_count(count, &block)
+      def ensure_instance_count(count, &block) # ✔︎
         self.desired_count = count
         wait_for_service_health(&block)
       end
 
       def wait_for_service_health(&block)
         @waiter.until do |attempt|
+          reload
           callbacks_for(block)
               .try_respond_with(:waiting_for_health, attempt) if block
           has_desired_count?
