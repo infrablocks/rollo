@@ -7,14 +7,15 @@ require_relative './host'
 module Rollo
   module Model
     class HostCluster
-      def initialize(asg_name, region)
+      def initialize(asg_name, region, asg_resource = nil, waiter = nil)
         @region = region
         @asg_name = asg_name
-        @asg_resource = Aws::AutoScaling::Resource.new(region: region)
+        @asg_resource = asg_resource ||
+            Aws::AutoScaling::Resource.new(region: region)
         @asg = @asg_resource.group(@asg_name)
         record_latest_scaling_activity
 
-        @waiter = Wait.new(attempts: 300, timeout: 30, delay: 5)
+        @waiter = waiter || Wait.new(attempts: 300, timeout: 30, delay: 5)
       end
 
       def reload
@@ -26,22 +27,18 @@ module Rollo
       end
 
       def desired_capacity
-        reload
         @asg.desired_capacity
       end
 
       def desired_capacity=(capacity)
-        reload
         @asg.set_desired_capacity({desired_capacity: capacity})
       end
 
       def scaling_activities
-        reload
         @asg.activities.collect {|a| ScalingActivity.new(a)}
       end
 
       def hosts
-        reload
         @asg.instances.collect {|h| Host.new(h)}
       end
 
@@ -75,6 +72,7 @@ module Rollo
 
       def wait_for_capacity_change_start(&block)
         @waiter.until do |attempt|
+          reload
           callbacks_for(block)
               .try_respond_with(:waiting_for_start, attempt) if block
           has_started_changing_capacity?
@@ -83,6 +81,7 @@ module Rollo
 
       def wait_for_capacity_change_end(&block)
         @waiter.until do |attempt|
+          reload
           callbacks_for(block)
               .try_respond_with(:waiting_for_complete, attempt) if block
           has_completed_changing_capacity?
@@ -91,6 +90,7 @@ module Rollo
 
       def wait_for_capacity_health(&block)
         @waiter.until do |attempt|
+          reload
           callbacks_for(block)
               .try_respond_with(:waiting_for_health, attempt) if block
           has_desired_capacity?

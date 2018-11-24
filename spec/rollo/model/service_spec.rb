@@ -7,21 +7,20 @@ RSpec.describe Rollo::Model::Service do
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
       ecs_service_name = 'some-ecs-service-name'
-      ecs_service = Aws::ECS::Types::Service.new(service_name: ecs_service_name)
 
-      ecs_describe_services_response =
-          Aws::ECS::Types::DescribeServicesResponse.new(services: [ecs_service])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(ecs_describe_services_response))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [{services: [{service_name: ecs_service_name}]}])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       service = Rollo::Model::Service.new(
           ecs_cluster_name, ecs_service_arn, region, ecs_resource)
 
+      expect(ecs_client.api_requests
+          .select {|r| r[:operation_name] == :describe_services}
+          .first[:params])
+          .to(eq(cluster: ecs_cluster_name, services: [ecs_service_arn]))
       expect(service.name).to(eq(ecs_service_name))
     end
 
@@ -29,19 +28,12 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service = Aws::ECS::Types::Service.new(running_count: 6)
 
-      ecs_describe_services_response =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(
-                  ecs_describe_services_response))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [{services: [{running_count: 6}]}])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       service = Rollo::Model::Service.new(
           ecs_cluster_name, ecs_service_arn, region, ecs_resource)
@@ -53,19 +45,12 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service = Aws::ECS::Types::Service.new(desired_count: 6)
 
-      ecs_describe_services_response =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(
-                  ecs_describe_services_response))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [{services: [{desired_count: 6}]}])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       service = Rollo::Model::Service.new(
           ecs_cluster_name, ecs_service_arn, region, ecs_resource)
@@ -79,31 +64,25 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service = Aws::ECS::Types::Service.new(desired_count: 3)
 
-      ecs_describe_services_response =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(ecs_describe_services_response))
-      allow(ecs_client).to(receive(:update_service))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [{services: [{desired_count: 3}]}])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       service = Rollo::Model::Service.new(
           ecs_cluster_name, ecs_service_arn, region, ecs_resource)
 
-      expect(ecs_client)
-          .to(receive(:update_service)
-              .with(
-                  cluster: ecs_cluster_name,
-                  service: ecs_service_arn,
-                  desired_count: 6))
-
       service.desired_count = 6
+
+      expect(ecs_client.api_requests
+          .select {|r| r[:operation_name] == :update_service}
+          .first[:params])
+          .to(eq(
+              cluster: ecs_cluster_name,
+              service: ecs_service_arn,
+              desired_count: 6))
     end
   end
 
@@ -112,20 +91,12 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service = Aws::ECS::Types::Service.new(
-          running_count: 3,
-          desired_count: 3)
 
-      ecs_describe_services_response =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(ecs_describe_services_response))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [{services: [{running_count: 3, desired_count: 3}]}])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       service = Rollo::Model::Service.new(
           ecs_cluster_name, ecs_service_arn, region, ecs_resource)
@@ -137,25 +108,17 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service = Aws::ECS::Types::Service.new(
-          running_count: 3,
-          desired_count: 3)
 
-      ecs_describe_services_response =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(ecs_describe_services_response))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [{services: [{running_count: 3, desired_count: 6}]}])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       service = Rollo::Model::Service.new(
           ecs_cluster_name, ecs_service_arn, region, ecs_resource)
 
-      expect(service.has_desired_count?).to(be(true))
+      expect(service.has_desired_count?).to(be(false))
     end
   end
 
@@ -164,18 +127,12 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service = Aws::ECS::Types::Service.new(
-          scheduling_strategy: 'REPLICA')
 
-      ecs_describe_services_response =
-          Aws::ECS::Types::DescribeServicesResponse.new(services: [ecs_service])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(ecs_describe_services_response))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [{services: [{scheduling_strategy: 'REPLICA'}]}])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       service = Rollo::Model::Service.new(
           ecs_cluster_name, ecs_service_arn, region, ecs_resource)
@@ -187,18 +144,12 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service = Aws::ECS::Types::Service.new(
-          scheduling_strategy: 'DAEMON')
 
-      ecs_describe_services_response =
-          Aws::ECS::Types::DescribeServicesResponse.new(services: [ecs_service])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(ecs_describe_services_response))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [{services: [{scheduling_strategy: 'DAEMON'}]}])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       service = Rollo::Model::Service.new(
           ecs_cluster_name, ecs_service_arn, region, ecs_resource)
@@ -212,28 +163,15 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service_t1 = Aws::ECS::Types::Service.new(
-          running_count: 3,
-          desired_count: 3)
-      ecs_service_t2 = Aws::ECS::Types::Service.new(
-          running_count: 6,
-          desired_count: 9)
 
-      ecs_describe_services_response_1 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t1])
-      ecs_describe_services_response_2 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t2])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(
-                  ecs_describe_services_response_1,
-                  ecs_describe_services_response_2))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [
+              {services: [{running_count: 3, desired_count: 3}]},
+              {services: [{running_count: 6, desired_count: 9}]}
+          ])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       service = Rollo::Model::Service.new(
           ecs_cluster_name, ecs_service_arn, region, ecs_resource)
@@ -250,41 +188,16 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service_t1 = Aws::ECS::Types::Service.new(
-          running_count: 3,
-          desired_count: 3)
-      ecs_service_t2 = Aws::ECS::Types::Service.new(
-          running_count: 6,
-          desired_count: 9)
-      ecs_service_t3 = Aws::ECS::Types::Service.new(
-          running_count: 9,
-          desired_count: 9)
 
-      ecs_describe_services_response_1 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t1])
-      ecs_describe_services_response_2 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t2])
-      ecs_describe_services_response_3 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t3])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(
-                  ecs_describe_services_response_1,
-                  ecs_describe_services_response_2,
-                  ecs_describe_services_response_3))
-      allow(ecs_client)
-          .to(receive(:update_service)
-              .with(
-                  cluster: ecs_cluster_name,
-                  service: ecs_service_arn,
-                  desired_count: 9))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [
+              {services: [{running_count: 3, desired_count: 3}]},
+              {services: [{running_count: 6, desired_count: 9}]},
+              {services: [{running_count: 9, desired_count: 9}]}
+          ])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
 
@@ -293,50 +206,37 @@ RSpec.describe Rollo::Model::Service do
 
       service.ensure_instance_count(9)
 
-      expect(ecs_client)
-          .to(have_received(:describe_services)
-              .exactly(3).times)
+      expect(ecs_client.api_requests
+          .select {|r| r[:operation_name] == :update_service}
+          .first[:params])
+          .to(eq(
+              cluster: ecs_cluster_name,
+              service: ecs_service_arn,
+              desired_count: 9))
+      expect(ecs_client.api_requests
+          .select {|r| r[:operation_name] == :describe_services}
+          .map {|r| r[:params]})
+          .to(eq([
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]},
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]},
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]}
+          ]))
     end
 
     it 'reports health check attempts using the provided block' do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service_t1 = Aws::ECS::Types::Service.new(
-          running_count: 3,
-          desired_count: 3)
-      ecs_service_t2 = Aws::ECS::Types::Service.new(
-          running_count: 6,
-          desired_count: 9)
-      ecs_service_t3 = Aws::ECS::Types::Service.new(
-          running_count: 9,
-          desired_count: 9)
 
-      ecs_describe_services_response_1 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t1])
-      ecs_describe_services_response_2 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t2])
-      ecs_describe_services_response_3 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t3])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(
-                  ecs_describe_services_response_1,
-                  ecs_describe_services_response_2,
-                  ecs_describe_services_response_3))
-      allow(ecs_client)
-          .to(receive(:update_service)
-              .with(
-                  cluster: ecs_cluster_name,
-                  service: ecs_service_arn,
-                  desired_count: 9))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [
+              {services: [{running_count: 3, desired_count: 3}]},
+              {services: [{running_count: 6, desired_count: 9}]},
+              {services: [{running_count: 9, desired_count: 9}]}
+          ])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
 
@@ -360,36 +260,16 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service_t1 = Aws::ECS::Types::Service.new(
-          running_count: 3,
-          desired_count: 3)
-      ecs_service_t2 = Aws::ECS::Types::Service.new(
-          running_count: 6,
-          desired_count: 9)
-      ecs_service_t3 = Aws::ECS::Types::Service.new(
-          running_count: 9,
-          desired_count: 9)
 
-      ecs_describe_services_response_1 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t1])
-      ecs_describe_services_response_2 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t2])
-      ecs_describe_services_response_3 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t3])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(
-                  ecs_describe_services_response_1,
-                  ecs_describe_services_response_2,
-                  ecs_describe_services_response_3))
-      allow(ecs_client).to(receive(:update_service))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [
+              {services: [{running_count: 3, desired_count: 3}]},
+              {services: [{running_count: 6, desired_count: 9}]},
+              {services: [{running_count: 9, desired_count: 9}]}
+          ])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
 
@@ -398,56 +278,37 @@ RSpec.describe Rollo::Model::Service do
 
       service.increase_instance_count_by(6)
 
-      expect(ecs_client)
-          .to(have_received(:update_service)
-              .with(
-                  cluster: ecs_cluster_name,
-                  service: ecs_service_arn,
-                  desired_count: 9))
-      expect(ecs_client)
-          .to(have_received(:describe_services)
-              .exactly(3).times)
+      expect(ecs_client.api_requests
+          .select {|r| r[:operation_name] == :update_service}
+          .first[:params])
+          .to(eq(
+              cluster: ecs_cluster_name,
+              service: ecs_service_arn,
+              desired_count: 9))
+      expect(ecs_client.api_requests
+          .select {|r| r[:operation_name] == :describe_services}
+          .map {|r| r[:params]})
+          .to(eq([
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]},
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]},
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]}
+          ]))
     end
 
     it 'reports on start of instance count change using provided block' do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service_t1 = Aws::ECS::Types::Service.new(
-          running_count: 3,
-          desired_count: 3)
-      ecs_service_t2 = Aws::ECS::Types::Service.new(
-          running_count: 6,
-          desired_count: 9)
-      ecs_service_t3 = Aws::ECS::Types::Service.new(
-          running_count: 9,
-          desired_count: 9)
 
-      ecs_describe_services_response_1 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t1])
-      ecs_describe_services_response_2 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t2])
-      ecs_describe_services_response_3 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t3])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(
-                  ecs_describe_services_response_1,
-                  ecs_describe_services_response_2,
-                  ecs_describe_services_response_3))
-      allow(ecs_client)
-          .to(receive(:update_service)
-              .with(
-                  cluster: ecs_cluster_name,
-                  service: ecs_service_arn,
-                  desired_count: 9))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [
+              {services: [{running_count: 3, desired_count: 3}]},
+              {services: [{running_count: 6, desired_count: 9}]},
+              {services: [{running_count: 9, desired_count: 9}]}
+          ])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
 
@@ -468,41 +329,16 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service_t1 = Aws::ECS::Types::Service.new(
-          running_count: 3,
-          desired_count: 3)
-      ecs_service_t2 = Aws::ECS::Types::Service.new(
-          running_count: 6,
-          desired_count: 9)
-      ecs_service_t3 = Aws::ECS::Types::Service.new(
-          running_count: 9,
-          desired_count: 9)
 
-      ecs_describe_services_response_1 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t1])
-      ecs_describe_services_response_2 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t2])
-      ecs_describe_services_response_3 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t3])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(
-                  ecs_describe_services_response_1,
-                  ecs_describe_services_response_2,
-                  ecs_describe_services_response_3))
-      allow(ecs_client)
-          .to(receive(:update_service)
-              .with(
-                  cluster: ecs_cluster_name,
-                  service: ecs_service_arn,
-                  desired_count: 9))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [
+              {services: [{running_count: 3, desired_count: 3}]},
+              {services: [{running_count: 6, desired_count: 9}]},
+              {services: [{running_count: 9, desired_count: 9}]}
+          ])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
 
@@ -526,36 +362,16 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service_t1 = Aws::ECS::Types::Service.new(
-          running_count: 9,
-          desired_count: 9)
-      ecs_service_t2 = Aws::ECS::Types::Service.new(
-          running_count: 6,
-          desired_count: 3)
-      ecs_service_t3 = Aws::ECS::Types::Service.new(
-          running_count: 3,
-          desired_count: 3)
 
-      ecs_describe_services_response_1 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t1])
-      ecs_describe_services_response_2 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t2])
-      ecs_describe_services_response_3 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t3])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(
-                  ecs_describe_services_response_1,
-                  ecs_describe_services_response_2,
-                  ecs_describe_services_response_3))
-      allow(ecs_client).to(receive(:update_service))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [
+              {services: [{running_count: 9, desired_count: 9}]},
+              {services: [{running_count: 6, desired_count: 3}]},
+              {services: [{running_count: 3, desired_count: 3}]}
+          ])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
 
@@ -564,56 +380,37 @@ RSpec.describe Rollo::Model::Service do
 
       service.decrease_instance_count_by(6)
 
-      expect(ecs_client)
-          .to(have_received(:update_service)
-              .with(
-                  cluster: ecs_cluster_name,
-                  service: ecs_service_arn,
-                  desired_count: 3))
-      expect(ecs_client)
-          .to(have_received(:describe_services)
-              .exactly(3).times)
+      expect(ecs_client.api_requests
+          .select {|r| r[:operation_name] == :update_service}
+          .first[:params])
+          .to(eq(
+              cluster: ecs_cluster_name,
+              service: ecs_service_arn,
+              desired_count: 3))
+      expect(ecs_client.api_requests
+          .select {|r| r[:operation_name] == :describe_services}
+          .map {|r| r[:params]})
+          .to(eq([
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]},
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]},
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]}
+          ]))
     end
 
     it 'reports on start of instance count change using provided block' do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service_t1 = Aws::ECS::Types::Service.new(
-          running_count: 9,
-          desired_count: 9)
-      ecs_service_t2 = Aws::ECS::Types::Service.new(
-          running_count: 6,
-          desired_count: 3)
-      ecs_service_t3 = Aws::ECS::Types::Service.new(
-          running_count: 3,
-          desired_count: 3)
 
-      ecs_describe_services_response_1 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t1])
-      ecs_describe_services_response_2 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t2])
-      ecs_describe_services_response_3 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t3])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(
-                  ecs_describe_services_response_1,
-                  ecs_describe_services_response_2,
-                  ecs_describe_services_response_3))
-      allow(ecs_client)
-          .to(receive(:update_service)
-              .with(
-                  cluster: ecs_cluster_name,
-                  service: ecs_service_arn,
-                  desired_count: 3))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [
+              {services: [{running_count: 9, desired_count: 9}]},
+              {services: [{running_count: 6, desired_count: 3}]},
+              {services: [{running_count: 3, desired_count: 3}]}
+          ])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
 
@@ -634,41 +431,16 @@ RSpec.describe Rollo::Model::Service do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
-      ecs_service_t1 = Aws::ECS::Types::Service.new(
-          running_count: 9,
-          desired_count: 9)
-      ecs_service_t2 = Aws::ECS::Types::Service.new(
-          running_count: 6,
-          desired_count: 3)
-      ecs_service_t3 = Aws::ECS::Types::Service.new(
-          running_count: 3,
-          desired_count: 3)
 
-      ecs_describe_services_response_1 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t1])
-      ecs_describe_services_response_2 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t2])
-      ecs_describe_services_response_3 =
-          Aws::ECS::Types::DescribeServicesResponse.new(
-              services: [ecs_service_t3])
-
-      ecs_client = double('ecs client')
-      ecs_resource = Struct.new(:client).new(ecs_client)
-      allow(ecs_client)
-          .to(receive(:describe_services)
-              .with(cluster: ecs_cluster_name, services: [ecs_service_arn])
-              .and_return(
-                  ecs_describe_services_response_1,
-                  ecs_describe_services_response_2,
-                  ecs_describe_services_response_3))
-      allow(ecs_client)
-          .to(receive(:update_service)
-              .with(
-                  cluster: ecs_cluster_name,
-                  service: ecs_service_arn,
-                  desired_count: 3))
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [
+              {services: [{running_count: 9, desired_count: 9}]},
+              {services: [{running_count: 6, desired_count: 3}]},
+              {services: [{running_count: 3, desired_count: 3}]}
+          ])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
 
       waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
 

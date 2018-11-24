@@ -20,7 +20,7 @@ module Rollo
       def replica_services
         get_ecs_service_arns
             .collect {|arn| Service.new(@ecs_cluster_name, arn, @region)}
-            .select {|service| service.is_replica? }
+            .select {|service| service.is_replica?}
       end
 
       def with_replica_services(&block)
@@ -44,25 +44,9 @@ module Rollo
       end
 
       def get_ecs_service_arns
-        service_arns, next_token = get_page_of_ecs_service_arns(nil)
-        loop do
-          break if next_token.nil?
-          more_service_arns, next_token =
-              get_page_of_ecs_service_arns(next_token)
-          service_arns += more_service_arns
-        end
-        service_arns
-      end
-
-      def get_page_of_ecs_service_arns(next_token)
-        list_services_response = @ecs_resource.client
-            .list_services(
-                cluster: @ecs_cluster.cluster_name,
-                next_token: next_token)
-        service_arns = list_services_response.service_arns
-        next_token = list_services_response.next_token
-
-        [service_arns, next_token]
+        @ecs_resource.client
+            .list_services(cluster: @ecs_cluster.cluster_name)
+            .inject([]) {|arns, response| arns + response.service_arns}
       end
     end
   end
