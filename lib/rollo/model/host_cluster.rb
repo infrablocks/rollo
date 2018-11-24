@@ -22,11 +22,11 @@ module Rollo
         @asg.reload
       end
 
-      def name
+      def name # ✔︎
         @asg_name
       end
 
-      def desired_capacity
+      def desired_capacity # ✔︎
         @asg.desired_capacity
       end
 
@@ -34,7 +34,7 @@ module Rollo
         @asg.set_desired_capacity({desired_capacity: capacity})
       end
 
-      def scaling_activities
+      def scaling_activities # ✔︎
         @asg.activities.collect {|a| ScalingActivity.new(a)}
       end
 
