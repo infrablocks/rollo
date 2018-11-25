@@ -34,8 +34,23 @@ module Rollo
         @asg.set_desired_capacity({desired_capacity: capacity})
       end
 
+      def has_desired_capacity? # ✔︎
+        hosts.size == desired_capacity &&
+            hosts.all? {|h| h.is_in_service? && h.is_healthy?}
+      end
+
       def scaling_activities # ✔︎
         @asg.activities.collect {|a| ScalingActivity.new(a)}
+      end
+
+      def has_started_changing_capacity? # ✔︎
+        scaling_activities
+            .select {|a| a.started_after_completion_of?(@last_scaling_activity)}
+            .size > 0
+      end
+
+      def has_completed_changing_capacity? # ✔︎
+        scaling_activities.all? {|a| a.is_complete?}
       end
 
       def hosts # ✔︎
@@ -99,21 +114,6 @@ module Rollo
 
       def record_latest_scaling_activity
         @last_scaling_activity = scaling_activities.first
-      end
-
-      def has_started_changing_capacity?
-        scaling_activities
-            .select {|a| a.started_after_completion_of?(@last_scaling_activity)}
-            .size > 0
-      end
-
-      def has_completed_changing_capacity?
-        scaling_activities.all? {|a| a.is_complete?}
-      end
-
-      def has_desired_capacity?
-        hosts.size == desired_capacity &&
-            hosts.all? {|h| h.is_in_service? && h.is_healthy?}
       end
 
       private
