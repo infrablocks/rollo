@@ -1139,4 +1139,267 @@ RSpec.describe Rollo::Model::HostCluster do
       expect(found_attempts).to(eq([1, 2]))
     end
   end
+
+  context '#wait_for_capacity_health' do
+    it 'returns once the capacity change has completed' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'Pending',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      host_cluster.wait_for_capacity_health
+
+      expect(as_client.api_requests
+          .select {|r| r[:operation_name] == :describe_auto_scaling_groups}
+          .length)
+          .to(eq(3))
+    end
+
+    it('raises exception if the capacity change does not complete within the ' +
+        'specified number of attempts') do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'Pending',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'Pending',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 2, timeout: 1, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      expect {
+        host_cluster.wait_for_capacity_health
+      }.to(raise_error(Wait::ResultInvalid))
+    end
+
+    it 'reports attempts using the provided block' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'Pending',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      found_attempts = []
+      host_cluster.wait_for_capacity_health do |on|
+        on.waiting_for_health do |attempt|
+          found_attempts << attempt
+        end
+      end
+
+      expect(found_attempts).to(eq([1, 2, 3]))
+    end
+  end
 end
