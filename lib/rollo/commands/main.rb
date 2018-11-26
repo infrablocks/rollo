@@ -48,7 +48,7 @@ module Rollo
                 "--> Waiting for capacity change to start " +
                     "(attempt #{attempt})...")
           end
-          on.waiting_for_complete do |attempt|
+          on.waiting_for_end do |attempt|
             puts(
                 "--> Waiting for capacity change to complete " +
                     "(attempt #{attempt})...")
@@ -140,7 +140,7 @@ module Rollo
                 "--> Waiting for capacity change to start " +
                     "(attempt #{attempt})...")
           end
-          on.waiting_for_complete do |attempt|
+          on.waiting_for_end do |attempt|
             puts(
                 "--> Waiting for capacity change to complete " +
                     "(attempt #{attempt})...")

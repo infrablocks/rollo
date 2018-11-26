@@ -7,6 +7,8 @@ require_relative './host'
 module Rollo
   module Model
     class HostCluster
+      attr_reader :last_scaling_activity
+
       def initialize(asg_name, region, asg_resource = nil, waiter = nil)
         @region = region
         @asg_name = asg_name
@@ -64,7 +66,7 @@ module Rollo
         callbacks_for(block).try_respond_with(
             :prepare, initial, increased)
 
-        ensure_capacity(increased, &block)
+        ensure_capacity_changed_to(increased, &block)
       end
 
       def decrease_capacity_by(capacity_delta, &block)
@@ -74,10 +76,10 @@ module Rollo
         callbacks_for(block).try_respond_with(
             :prepare, initial, decreased)
 
-        ensure_capacity(decreased, &block)
+        ensure_capacity_changed_to(decreased, &block)
       end
 
-      def ensure_capacity(capacity, &block)
+      def ensure_capacity_changed_to(capacity, &block) # ✔︎
         self.desired_capacity = capacity
         wait_for_capacity_change_start(&block)
         wait_for_capacity_change_end(&block)
@@ -85,7 +87,7 @@ module Rollo
         record_latest_scaling_activity
       end
 
-      def wait_for_capacity_change_start(&block)
+      def wait_for_capacity_change_start(&block) # ✔︎
         @waiter.until do |attempt|
           reload
           callbacks_for(block)
@@ -94,16 +96,16 @@ module Rollo
         end
       end
 
-      def wait_for_capacity_change_end(&block)
+      def wait_for_capacity_change_end(&block) # ✔︎
         @waiter.until do |attempt|
           reload
           callbacks_for(block)
-              .try_respond_with(:waiting_for_complete, attempt) if block
+              .try_respond_with(:waiting_for_end, attempt) if block
           has_completed_changing_capacity?
         end
       end
 
-      def wait_for_capacity_health(&block)
+      def wait_for_capacity_health(&block) # ✔︎
         @waiter.until do |attempt|
           reload
           callbacks_for(block)
