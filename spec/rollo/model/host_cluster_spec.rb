@@ -1993,4 +1993,1428 @@ RSpec.describe Rollo::Model::HostCluster do
           .to(eq(activity_2_id))
     end
   end
+
+  context '#increase_capacity_by' do
+    it 'notifies of the capacity change using the provided block' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      activity_1_id = SecureRandom.uuid
+      activity_2_id = SecureRandom.uuid
+
+      activity_1_start = Time.now - 360
+      activity_1_end = Time.now - 120
+      activity_2_start = Time.now - 60
+      activity_2_end = Time.now
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_scaling_activities,
+          [
+              {# First call is on creation
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Second call is on call of #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Third call is on call of #has_completed_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'Successful'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              }
+          ])
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      increase_details = []
+      host_cluster.increase_capacity_by(3) do |on|
+        on.prepare do |before, after|
+          increase_details << before << after
+        end
+      end
+
+      expect(increase_details).to(eq([3, 6]))
+    end
+
+    it 'increases the desired capacity by the specified amount' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      activity_1_id = SecureRandom.uuid
+      activity_2_id = SecureRandom.uuid
+
+      activity_1_start = Time.now - 360
+      activity_1_end = Time.now - 120
+      activity_2_start = Time.now - 60
+      activity_2_end = Time.now
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_scaling_activities,
+          [
+              {# First call is on creation
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Second call is on call of #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Third call is on call of #has_completed_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'Successful'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              }
+          ])
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      host_cluster.increase_capacity_by(3)
+
+      expect(as_client.api_requests
+          .select {|r| r[:operation_name] == :set_desired_capacity}
+          .first[:params])
+          .to(eq(
+              auto_scaling_group_name: asg_name,
+              desired_capacity: 6))
+    end
+
+    it 'waits for the capacity change to start and reports attempts' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      activity_1_id = SecureRandom.uuid
+      activity_2_id = SecureRandom.uuid
+
+      activity_1_start = Time.now - 360
+      activity_1_end = Time.now - 120
+      activity_2_start = Time.now - 60
+      activity_2_end = Time.now
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_scaling_activities,
+          [
+              {# First call is on creation
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Second call is on first call of
+                  # #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Third call is on second call of
+                  # #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Fourth call is on call of
+                  # #has_completed_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'Successful'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              }
+          ])
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      found_started_check_attempts = []
+      host_cluster.increase_capacity_by(3) do |on|
+        on.waiting_for_start do |attempt|
+          found_started_check_attempts << attempt
+        end
+      end
+
+      expect(found_started_check_attempts).to(eq([1, 2]))
+    end
+
+    it 'waits for the capacity change to complete and reports attempts' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      activity_1_id = SecureRandom.uuid
+      activity_2_id = SecureRandom.uuid
+
+      activity_1_start = Time.now - 360
+      activity_1_end = Time.now - 120
+      activity_2_start = Time.now - 60
+      activity_2_end = Time.now
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_scaling_activities,
+          [
+              {# First call is on creation
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Second call is on call of
+                  # #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Third call is on first call of
+                  # #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Fourth call is on second call of
+                  # #has_completed_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'Successful'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              }
+          ])
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      found_completed_check_attempts = []
+      host_cluster.increase_capacity_by(1) do |on|
+        on.waiting_for_end do |attempt|
+          found_completed_check_attempts << attempt
+        end
+      end
+
+      expect(found_completed_check_attempts).to(eq([1, 2]))
+    end
+
+    it 'waits for capacity health and reports attempts' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      activity_1_id = SecureRandom.uuid
+      activity_2_id = SecureRandom.uuid
+
+      activity_1_start = Time.now - 360
+      activity_1_end = Time.now - 120
+      activity_2_start = Time.now - 60
+      activity_2_end = Time.now
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_scaling_activities,
+          [
+              {# First call is on creation
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Second call is on call of
+                  # #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Third call is on call of
+                  # #has_completed_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'Successful'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              }
+          ])
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              { # First call gets desired capacity
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 2,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              { # Second call on call of reload in
+                  # #wait_for_capacity_change_start
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 2,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              { # Third call on call of reload in
+                  # #wait_for_capacity_change_end
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 2,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              { # Fourth call on first call of reload in
+                  # #wait_for_capacity_health
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'Pending',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              { # Fifth call on first call of reload in
+                  # #wait_for_capacity_health
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      found_completed_check_attempts = []
+      host_cluster.increase_capacity_by(1) do |on|
+        on.waiting_for_health do |attempt|
+          found_completed_check_attempts << attempt
+        end
+      end
+
+      expect(found_completed_check_attempts).to(eq([1, 2]))
+    end
+
+    it 'records the last scaling activity' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      activity_1_id = SecureRandom.uuid
+      activity_2_id = SecureRandom.uuid
+
+      activity_1_start = Time.now - 360
+      activity_1_end = Time.now - 120
+      activity_2_start = Time.now - 60
+      activity_2_end = Time.now
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_scaling_activities,
+          [
+              {# First call is on creation
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Second call is on call of #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Third call is on call of #has_completed_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'Successful'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              }
+          ])
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      expect(host_cluster.last_scaling_activity.id)
+          .to(eq(activity_1_id))
+
+      host_cluster.increase_capacity_by(1)
+
+      expect(host_cluster.last_scaling_activity.id)
+          .to(eq(activity_2_id))
+    end
+  end
+
+  context '#decrease_capacity_by' do
+    it 'notifies of the capacity change using the provided block' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      activity_1_id = SecureRandom.uuid
+      activity_2_id = SecureRandom.uuid
+
+      activity_1_start = Time.now - 360
+      activity_1_end = Time.now - 120
+      activity_2_start = Time.now - 60
+      activity_2_end = Time.now
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_scaling_activities,
+          [
+              {# First call is on creation
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Second call is on call of #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Third call is on call of #has_completed_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'Successful'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              }
+          ])
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      increase_details = []
+      host_cluster.decrease_capacity_by(1) do |on|
+        on.prepare do |before, after|
+          increase_details << before << after
+        end
+      end
+
+      expect(increase_details).to(eq([3, 2]))
+    end
+
+    it 'decreases the desired capacity by the specified amount' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      activity_1_id = SecureRandom.uuid
+      activity_2_id = SecureRandom.uuid
+
+      activity_1_start = Time.now - 360
+      activity_1_end = Time.now - 120
+      activity_2_start = Time.now - 60
+      activity_2_end = Time.now
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_scaling_activities,
+          [
+              {# First call is on creation
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Second call is on call of #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Third call is on call of #has_completed_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'Successful'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              }
+          ])
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      host_cluster.decrease_capacity_by(1)
+
+      expect(as_client.api_requests
+          .select {|r| r[:operation_name] == :set_desired_capacity}
+          .first[:params])
+          .to(eq(
+              auto_scaling_group_name: asg_name,
+              desired_capacity: 2))
+    end
+
+    it 'waits for the capacity change to start and reports attempts' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      activity_1_id = SecureRandom.uuid
+      activity_2_id = SecureRandom.uuid
+
+      activity_1_start = Time.now - 360
+      activity_1_end = Time.now - 120
+      activity_2_start = Time.now - 60
+      activity_2_end = Time.now
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_scaling_activities,
+          [
+              {# First call is on creation
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Second call is on first call of
+                  # #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Third call is on second call of
+                  # #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Fourth call is on call of
+                  # #has_completed_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'Successful'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              }
+          ])
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      found_started_check_attempts = []
+      host_cluster.decrease_capacity_by(1) do |on|
+        on.waiting_for_start do |attempt|
+          found_started_check_attempts << attempt
+        end
+      end
+
+      expect(found_started_check_attempts).to(eq([1, 2]))
+    end
+
+    it 'waits for the capacity change to complete and reports attempts' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      activity_1_id = SecureRandom.uuid
+      activity_2_id = SecureRandom.uuid
+
+      activity_1_start = Time.now - 360
+      activity_1_end = Time.now - 120
+      activity_2_start = Time.now - 60
+      activity_2_end = Time.now
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_scaling_activities,
+          [
+              {# First call is on creation
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Second call is on call of
+                  # #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Third call is on first call of
+                  # #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Fourth call is on second call of
+                  # #has_completed_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'Successful'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              }
+          ])
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      found_completed_check_attempts = []
+      host_cluster.decrease_capacity_by(1) do |on|
+        on.waiting_for_end do |attempt|
+          found_completed_check_attempts << attempt
+        end
+      end
+
+      expect(found_completed_check_attempts).to(eq([1, 2]))
+    end
+
+    it 'waits for capacity health and reports attempts' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      activity_1_id = SecureRandom.uuid
+      activity_2_id = SecureRandom.uuid
+
+      activity_1_start = Time.now - 360
+      activity_1_end = Time.now - 120
+      activity_2_start = Time.now - 60
+      activity_2_end = Time.now
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_scaling_activities,
+          [
+              {# First call is on creation
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Second call is on call of
+                  # #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Third call is on call of
+                  # #has_completed_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'Successful'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              }
+          ])
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              { # First call gets desired capacity
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              { # Second call on call of reload in
+                  # #wait_for_capacity_change_start
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              { # Third call on call of reload in
+                  # #wait_for_capacity_change_end
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              { # Fourth call on first call of reload in
+                  # #wait_for_capacity_health
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 2,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'Terminating',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              },
+              { # Fifth call on first call of reload in
+                  # #wait_for_capacity_health
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 2,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      found_completed_check_attempts = []
+      host_cluster.decrease_capacity_by(1) do |on|
+        on.waiting_for_health do |attempt|
+          found_completed_check_attempts << attempt
+        end
+      end
+
+      expect(found_completed_check_attempts).to(eq([1, 2]))
+    end
+
+    it 'records the last scaling activity' do
+      region = 'eu-west-1'
+      asg_name = 'some-auto-scaling-group'
+
+      instance_1_id = 'i-abcdef1234567891'
+      instance_2_id = 'i-abcdef1234567892'
+      instance_3_id = 'i-abcdef1234567893'
+
+      activity_1_id = SecureRandom.uuid
+      activity_2_id = SecureRandom.uuid
+
+      activity_1_start = Time.now - 360
+      activity_1_end = Time.now - 120
+      activity_2_start = Time.now - 60
+      activity_2_end = Time.now
+
+      as_client = Aws::AutoScaling::Client.new(stub_responses: true)
+      as_client.stub_responses(
+          :describe_scaling_activities,
+          [
+              {# First call is on creation
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Second call is on call of #has_started_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'InProgress'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              },
+              {# Third call is on call of #has_completed_changing_capacity?
+                  activities: [
+                      activity_data(asg_name,
+                          activity_id: activity_2_id,
+                          start_time: activity_2_start,
+                          end_time: activity_2_end,
+                          status_code: 'Successful'),
+                      activity_data(asg_name,
+                          activity_id: activity_1_id,
+                          start_time: activity_1_start,
+                          end_time: activity_1_end,
+                          status_code: 'Successful'),
+                  ]
+              }
+          ])
+      as_client.stub_responses(
+          :describe_auto_scaling_groups,
+          [
+              {
+                  auto_scaling_groups: [
+                      auto_scaling_group_data(asg_name,
+                          desired_capacity: 3,
+                          instances: [
+                              instance_data(
+                                  instance_id: instance_1_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_2_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy'),
+                              instance_data(
+                                  instance_id: instance_3_id,
+                                  lifecycle_state: 'InService',
+                                  health_status: 'Healthy')
+                          ]
+                      )
+                  ]
+              }
+          ])
+      as_resource = Aws::AutoScaling::Resource.new(client: as_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      host_cluster = Rollo::Model::HostCluster.new(
+          asg_name, region, as_resource, waiter)
+
+      expect(host_cluster.last_scaling_activity.id)
+          .to(eq(activity_1_id))
+
+      host_cluster.decrease_capacity_by(1)
+
+      expect(host_cluster.last_scaling_activity.id)
+          .to(eq(activity_2_id))
+    end
+  end
 end
