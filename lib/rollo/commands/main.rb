@@ -11,10 +11,10 @@ module Rollo
       end
 
       desc('host-cluster', 'manages the host cluster')
-      subcommand "host-cluster", Commands::HostCluster
+      subcommand "host-cluster", Rollo::Commands::HostCluster
 
       desc('service-cluster', 'manages the service cluster')
-      subcommand "service-cluster", Commands::ServiceCluster
+      subcommand "service-cluster", Rollo::Commands::ServiceCluster
 
       desc('version', 'prints the version number of rollo')
       def version
