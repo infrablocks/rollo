@@ -23,7 +23,7 @@ module Rollo
         batch_size = options[:batch_size]
 
         host_cluster = host_cluster ||
-            Rollo::HostCluster.new(asg_name, region)
+            Rollo::Model::HostCluster.new(asg_name, region)
 
         say("Increasing host cluster desired capacity by #{batch_size}...")
         with_padding do
@@ -66,9 +66,9 @@ module Rollo
         batch_size = options[:batch_size]
 
         host_cluster = host_cluster ||
-            Rollo::HostCluster.new(asg_name, region)
+            Rollo::Model::HostCluster.new(asg_name, region)
         service_cluster = service_cluster ||
-            Rollo::ServiceCluster.new(ecs_cluster_name, region)
+            Rollo::Model::ServiceCluster.new(ecs_cluster_name, region)
 
         say("Decreasing host cluster desired capacity by #{batch_size}...")
         with_padding do
@@ -133,9 +133,9 @@ module Rollo
         service_start_wait_seconds = 60 * service_start_wait_minutes
 
         host_cluster = host_cluster ||
-            Rollo::HostCluster.new(asg_name, region)
+            Rollo::Model::HostCluster.new(asg_name, region)
         service_cluster = service_cluster ||
-            Rollo::ServiceCluster.new(ecs_cluster_name, region)
+            Rollo::Model::ServiceCluster.new(ecs_cluster_name, region)
 
         hosts = host_cluster.hosts.select {|h| instance_ids.include?(h.id) }
         host_batches = hosts.each_slice(batch_size).to_a

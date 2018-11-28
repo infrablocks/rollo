@@ -32,7 +32,7 @@ module Rollo
         service_start_wait_seconds = 60 * service_start_wait_minutes
 
         service_cluster = service_cluster ||
-            Rollo::ServiceCluster.new(ecs_cluster_name, region)
+            Rollo::Model::ServiceCluster.new(ecs_cluster_name, region)
 
         say("Increasing service instance counts by #{batch_size}...")
         with_padding do
@@ -91,7 +91,7 @@ module Rollo
         batch_size = options[:batch_size]
 
         service_cluster = service_cluster ||
-            Rollo::ServiceCluster.new(ecs_cluster_name, region)
+            Rollo::Model::ServiceCluster.new(ecs_cluster_name, region)
 
         say("Decreasing service instance counts by #{batch_size}...")
         with_padding do

@@ -11,10 +11,10 @@ module Rollo
       end
 
       desc('host-cluster', 'manages the host cluster')
-      subcommand "host-cluster", HostCluster
+      subcommand "host-cluster", Commands::HostCluster
 
       desc('service-cluster', 'manages the service cluster')
-      subcommand "service-cluster", ServiceCluster
+      subcommand "service-cluster", Commands::ServiceCluster
 
       desc('version', 'prints the version number of rollo')
       def version
@@ -32,8 +32,9 @@ module Rollo
               'The number of hosts / service instances to add / remove at ' +
                   'a time.')
       def roll(region, asg_name, ecs_cluster_name)
-        host_cluster = Rollo::HostCluster.new(asg_name, region)
-        service_cluster = Rollo::ServiceCluster.new(ecs_cluster_name, region)
+        host_cluster = Rollo::Model::HostCluster.new(asg_name, region)
+        service_cluster = Rollo::Model::ServiceCluster
+            .new(ecs_cluster_name, region)
 
         initial_hosts = host_cluster.hosts
 
