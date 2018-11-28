@@ -51,35 +51,35 @@ module Rollo
           end
 
           invoke(
-              "host-cluster:expand",
+              "rollo:commands:host-cluster:expand",
               [
                   region, asg_name, ecs_cluster_name,
                   host_cluster
               ])
 
           invoke(
-              "service-cluster:expand",
+              "rollo:commands:service-cluster:expand",
               [
                   region, asg_name, ecs_cluster_name,
                   service_cluster
               ])
 
           invoke(
-              "host-cluster:terminate",
+              "rollo:commands:host-cluster:terminate",
               [
                   region, asg_name, ecs_cluster_name, initial_hosts.map(&:id),
                   host_cluster, service_cluster
               ])
 
           invoke(
-              "host-cluster:contract",
+              "rollo:commands:host-cluster:contract",
               [
                   region, asg_name, ecs_cluster_name,
                   host_cluster, service_cluster
               ])
 
           invoke(
-              "service-cluster:contract",
+              "rollo:commands:service-cluster:contract",
               [
                   region, asg_name, ecs_cluster_name,
                   service_cluster
