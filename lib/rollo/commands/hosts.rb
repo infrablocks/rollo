@@ -3,14 +3,16 @@ require_relative '../model'
 
 module Rollo
   module Commands
-    class HostCluster < Thor
+    class Hosts < Thor
+      namespace :hosts
+
       def self.exit_on_failure?
         true
       end
 
       desc(
           'expand REGION ASG_NAME ECS_CLUSTER_NAME',
-          '')
+          'Expands the host cluster by one batch.')
       method_option(
           :batch_size,
           aliases: '-b',
@@ -53,7 +55,7 @@ module Rollo
 
       desc(
           'contract REGION ASG_NAME ECS_CLUSTER_NAME',
-          '')
+          'Contracts the host cluster by one batch')
       method_option(
           :batch_size,
           aliases: '-b',
@@ -111,7 +113,7 @@ module Rollo
 
       desc(
           'terminate REGION ASG_NAME ECS_CLUSTER_NAME INSTANCE_IDS*',
-          '')
+          'Terminates the specified hosts within the cluster.')
       method_option(
           :batch_size,
           aliases: '-b',

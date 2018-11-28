@@ -1,28 +1,30 @@
 require 'thor'
 require_relative '../model'
-require_relative './host_cluster'
-require_relative './service_cluster'
+require_relative './hosts'
+require_relative './services'
 
 module Rollo
   module Commands
     class Main < Thor
+      namespace :main
+
       def self.exit_on_failure?
         true
       end
 
-      desc('host-cluster', 'manages the host cluster')
-      subcommand "host-cluster", Rollo::Commands::HostCluster
+      desc('hosts', 'Manages the host cluster')
+      subcommand :hosts, Rollo::Commands::Hosts
 
-      desc('service-cluster', 'manages the service cluster')
-      subcommand "service-cluster", Rollo::Commands::ServiceCluster
+      desc('services', 'Manages the service cluster')
+      subcommand :services, Rollo::Commands::Services
 
-      desc('version', 'prints the version number of rollo')
+      desc('version', 'Prints the version number of rollo')
       def version
         say Rollo::VERSION
       end
 
       desc('roll REGION ASG_NAME ECS_CLUSTER_NAME',
-          'rolls all instances in an ECS cluster')
+          'Rolls all hosts in the cluster')
       method_option(
           :batch_size,
           aliases: '-b',
@@ -51,35 +53,35 @@ module Rollo
           end
 
           invoke(
-              "rollo:commands:host-cluster:expand",
+              "hosts:expand",
               [
                   region, asg_name, ecs_cluster_name,
                   host_cluster
               ])
 
           invoke(
-              "rollo:commands:service-cluster:expand",
+              "services:expand",
               [
                   region, asg_name, ecs_cluster_name,
                   service_cluster
               ])
 
           invoke(
-              "rollo:commands:host-cluster:terminate",
+              "hosts:terminate",
               [
                   region, asg_name, ecs_cluster_name, initial_hosts.map(&:id),
                   host_cluster, service_cluster
               ])
 
           invoke(
-              "rollo:commands:host-cluster:contract",
+              "hosts:contract",
               [
                   region, asg_name, ecs_cluster_name,
                   host_cluster, service_cluster
               ])
 
           invoke(
-              "rollo:commands:service-cluster:contract",
+              "services:contract",
               [
                   region, asg_name, ecs_cluster_name,
                   service_cluster

@@ -3,14 +3,16 @@ require_relative '../model'
 
 module Rollo
   module Commands
-    class ServiceCluster < Thor
+    class Services < Thor
+      namespace :services
+
       def self.exit_on_failure?
         true
       end
 
       desc(
           'expand REGION ASG_NAME ECS_CLUSTER_NAME',
-          '')
+          'Expands the service cluster by one batch.')
       method_option(
           :batch_size,
           aliases: '-b',
@@ -77,7 +79,7 @@ module Rollo
 
       desc(
           'contract REGION ASG_NAME ECS_CLUSTER_NAME',
-          '')
+          'Contracts the service cluster by one batch.')
       method_option(
           :batch_size,
           aliases: '-b',
