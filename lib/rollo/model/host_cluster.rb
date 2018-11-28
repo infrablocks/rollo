@@ -20,42 +20,42 @@ module Rollo
         @waiter = waiter || Wait.new(attempts: 300, timeout: 30, delay: 5)
       end
 
-      def reload # ✔︎
+      def reload
         @asg.reload
       end
 
-      def name # ✔︎
+      def name
         @asg_name
       end
 
-      def desired_capacity # ✔︎
+      def desired_capacity
         @asg.desired_capacity
       end
 
-      def desired_capacity=(capacity) # ✔︎
+      def desired_capacity=(capacity)
         @asg.set_desired_capacity({desired_capacity: capacity})
       end
 
-      def has_desired_capacity? # ✔︎
+      def has_desired_capacity?
         hosts.size == desired_capacity &&
             hosts.all? {|h| h.is_in_service? && h.is_healthy?}
       end
 
-      def scaling_activities # ✔︎
+      def scaling_activities
         @asg.activities.collect {|a| ScalingActivity.new(a)}
       end
 
-      def has_started_changing_capacity? # ✔︎
+      def has_started_changing_capacity?
         scaling_activities
             .select {|a| a.started_after_completion_of?(@last_scaling_activity)}
             .size > 0
       end
 
-      def has_completed_changing_capacity? # ✔︎
-        scaling_activities.all? {|a| a.is_complete?}
+      def has_completed_changing_capacity?
+        scaling_activities.all?(&:is_complete?)
       end
 
-      def hosts # ✔︎
+      def hosts
         @asg.instances.collect {|h| Host.new(h)}
       end
 
@@ -79,7 +79,7 @@ module Rollo
         ensure_capacity_changed_to(decreased, &block)
       end
 
-      def ensure_capacity_changed_to(capacity, &block) # ✔︎
+      def ensure_capacity_changed_to(capacity, &block)
         self.desired_capacity = capacity
         wait_for_capacity_change_start(&block)
         wait_for_capacity_change_end(&block)
@@ -87,7 +87,7 @@ module Rollo
         record_latest_scaling_activity
       end
 
-      def wait_for_capacity_change_start(&block) # ✔︎
+      def wait_for_capacity_change_start(&block)
         @waiter.until do |attempt|
           reload
           callbacks_for(block)
@@ -96,7 +96,7 @@ module Rollo
         end
       end
 
-      def wait_for_capacity_change_end(&block) # ✔︎
+      def wait_for_capacity_change_end(&block)
         @waiter.until do |attempt|
           reload
           callbacks_for(block)
@@ -105,7 +105,7 @@ module Rollo
         end
       end
 
-      def wait_for_capacity_health(&block) # ✔︎
+      def wait_for_capacity_health(&block)
         @waiter.until do |attempt|
           reload
           callbacks_for(block)

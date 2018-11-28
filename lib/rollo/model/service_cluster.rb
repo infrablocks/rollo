@@ -20,7 +20,7 @@ module Rollo
       def replica_services
         get_ecs_service_arns
             .collect {|arn| Service.new(@ecs_cluster_name, arn, @region)}
-            .select {|service| service.is_replica?}
+            .select(&:is_replica?)
       end
 
       def with_replica_services(&block)
