@@ -295,6 +295,46 @@ RSpec.describe Rollo::Model::Service do
           ]))
     end
 
+    it('honours the specified maximum capacity when supplied') do
+      region = 'eu-west-1'
+      ecs_cluster_name = 'some-ecs-cluster'
+      ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
+
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [
+              {services: [{running_count: 6, desired_count: 6}]},
+              {services: [{running_count: 6, desired_count: 9}]},
+              {services: [{running_count: 9, desired_count: 9}]}
+          ])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      service = Rollo::Model::Service.new(
+          ecs_cluster_name, ecs_service_arn, region, ecs_resource, waiter)
+
+      service.increase_instance_count_by(
+          6, maximum_instance_count: 9)
+
+      expect(ecs_client.api_requests
+          .select {|r| r[:operation_name] == :update_service}
+          .first[:params])
+          .to(eq(
+              cluster: ecs_cluster_name,
+              service: ecs_service_arn,
+              desired_count: 9))
+      expect(ecs_client.api_requests
+          .select {|r| r[:operation_name] == :describe_services}
+          .map {|r| r[:params]})
+          .to(eq([
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]},
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]},
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]}
+          ]))
+    end
+
     it 'reports on start of instance count change using provided block' do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
@@ -387,6 +427,46 @@ RSpec.describe Rollo::Model::Service do
               cluster: ecs_cluster_name,
               service: ecs_service_arn,
               desired_count: 3))
+      expect(ecs_client.api_requests
+          .select {|r| r[:operation_name] == :describe_services}
+          .map {|r| r[:params]})
+          .to(eq([
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]},
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]},
+              {cluster: ecs_cluster_name, services: [ecs_service_arn]}
+          ]))
+    end
+
+    it('honours the specified minimum capacity when supplied') do
+      region = 'eu-west-1'
+      ecs_cluster_name = 'some-ecs-cluster'
+      ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
+
+      ecs_client = Aws::ECS::Client.new(stub_responses: true)
+      ecs_client.stub_responses(
+          :describe_services,
+          [
+              {services: [{running_count: 9, desired_count: 9}]},
+              {services: [{running_count: 9, desired_count: 6}]},
+              {services: [{running_count: 6, desired_count: 6}]}
+          ])
+      ecs_resource = Aws::ECS::Resource.new(client: ecs_client)
+
+      waiter = Wait.new(attempts: 10, timeout: 10, delay: 0.05)
+
+      service = Rollo::Model::Service.new(
+          ecs_cluster_name, ecs_service_arn, region, ecs_resource, waiter)
+
+      service.decrease_instance_count_by(
+          6, minimum_instance_count: 6)
+
+      expect(ecs_client.api_requests
+          .select {|r| r[:operation_name] == :update_service}
+          .first[:params])
+          .to(eq(
+              cluster: ecs_cluster_name,
+              service: ecs_service_arn,
+              desired_count: 6))
       expect(ecs_client.api_requests
           .select {|r| r[:operation_name] == :describe_services}
           .map {|r| r[:params]})

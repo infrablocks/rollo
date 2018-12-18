@@ -25,11 +25,17 @@ module Rollo
           type: :numeric,
           default: 2,
           desc: 'The number of minutes to wait for services to start up.')
+      method_option(
+          :maximum_instances,
+          aliases: '-mx',
+          type: :numeric,
+          desc: 'The maximum number of service instances to expand to.')
 
       def expand(
           region, _, ecs_cluster_name,
               service_cluster = nil)
         batch_size = options[:batch_size]
+        maximum_instances = options[:maximum_instances]
         service_start_wait_minutes = options[:startup_time]
         service_start_wait_seconds = 60 * service_start_wait_minutes
 
@@ -49,7 +55,8 @@ module Rollo
                   "Increasing instance count by #{batch_size} " +
                       "for #{service.name}")
               with_padding do
-                service.increase_instance_count_by(batch_size) do |on|
+                service.increase_instance_count_by(
+                    batch_size, maximum_instances: maximum_instances) do |on|
                   on.prepare do |current, target|
                     say(
                         "Changing instance count from #{current} " +
@@ -86,6 +93,11 @@ module Rollo
           type: :numeric,
           default: 3,
           desc: 'The number of service instances to remove at a time.')
+      method_option(
+          :minimum_instances,
+          aliases: '-mn',
+          type: :numeric,
+          desc: 'The minimum number of service instances to contract to.')
 
       def contract(
           region, _, ecs_cluster_name,

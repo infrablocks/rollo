@@ -52,24 +52,28 @@ module Rollo
         running_count == desired_count
       end
 
-      def increase_instance_count_by(count_delta, &block)
+      def increase_instance_count_by(count_delta, options = {}, &block)
+        maximum = options[:maximum_instance_count] || Float::INFINITY
         initial = desired_count
         increased = initial + count_delta
+        target = [increased, maximum].min
 
         callbacks_for(block).try_respond_with(
-            :prepare, initial, increased)
+            :prepare, initial, target)
 
-        ensure_instance_count(increased, &block)
+        ensure_instance_count(target, &block)
       end
 
-      def decrease_instance_count_by(count_delta, &block)
+      def decrease_instance_count_by(count_delta, options = {}, &block)
+        minimum = options[:minimum_instance_count] || 0
         initial = desired_count
         decreased = initial - count_delta
+        target = [decreased, minimum].max
 
         callbacks_for(block).try_respond_with(
-            :prepare, initial, decreased)
+            :prepare, initial, target)
 
-        ensure_instance_count(decreased, &block)
+        ensure_instance_count(target, &block)
       end
 
       def ensure_instance_count(count, &block)

@@ -33,6 +33,17 @@ module Rollo
           desc:
               'The number of hosts / service instances to add / remove at ' +
                   'a time.')
+      method_option(
+          :maximum_service_instances,
+          aliases: '-mx',
+          type: :numeric,
+          desc: 'The maximum number of service instances to expand to.')
+      method_option(
+          :minimum_service_instances,
+          aliases: '-mn',
+          type: :numeric,
+          desc: 'The minimum number of service instances to contract to.')
+
       def roll(region, asg_name, ecs_cluster_name)
         host_cluster = Rollo::Model::HostCluster.new(asg_name, region)
         service_cluster = Rollo::Model::ServiceCluster
@@ -64,7 +75,8 @@ module Rollo
               [
                   region, asg_name, ecs_cluster_name,
                   service_cluster
-              ])
+              ],
+              maximum_instances: options[:maximum_service_instances])
 
           invoke(
               "hosts:terminate",
@@ -85,7 +97,8 @@ module Rollo
               [
                   region, asg_name, ecs_cluster_name,
                   service_cluster
-              ])
+              ],
+              minimum_instances: options[:minimum_service_instances])
         end
 
         say("Instances in host cluster #{host_cluster.name} rolled " +
