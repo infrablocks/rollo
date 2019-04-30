@@ -1,5 +1,6 @@
 require 'aws-sdk'
 require 'hollerback'
+require 'wait'
 
 require_relative './scaling_activity'
 require_relative './host'
@@ -17,7 +18,7 @@ module Rollo
         @asg = @asg_resource.group(@asg_name)
         record_latest_scaling_activity
 
-        @waiter = waiter || Wait.new(attempts: 300, timeout: 30, delay: 5)
+        @waiter = waiter || Wait.new(attempts: 720, timeout: 30, delay: 5)
       end
 
       def reload

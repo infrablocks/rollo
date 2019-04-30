@@ -13,7 +13,7 @@ module Rollo
         @ecs_resource = ecs_resource || Aws::ECS::Resource.new(region: region)
         reload
 
-        @waiter = waiter || Wait.new(attempts: 300, timeout: 30, delay: 5)
+        @waiter = waiter || Wait.new(attempts: 720, timeout: 30, delay: 5)
       end
 
       def name
