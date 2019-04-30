@@ -739,7 +739,7 @@ PLATFORMS
 
 DEPENDENCIES
   aruba (~> 0.14)
-  bundler (~> 1.17)
+  bundler (~> 2.0)
   gem-release (~> 2.0)
   irbtools (~> 2.2)
   rake (~> 12.3)
@@ -747,4 +747,4 @@ DEPENDENCIES
   rspec (~> 3.8)
 
 BUNDLED WITH
-   1.17.2
+   2.0.1
