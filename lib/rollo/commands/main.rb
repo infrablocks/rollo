@@ -34,13 +34,23 @@ module Rollo
               'The number of hosts / service instances to add / remove at ' +
                   'a time.')
       method_option(
+          :maximum_host_instances,
+          aliases: '-mxh',
+          type: :numeric,
+          desc: 'The maximum number of host instances to expand to.')
+      method_option(
+          :minimum_host_instances,
+          aliases: '-mnh',
+          type: :numeric,
+          desc: 'The minimum number of host instances to contract to.')
+      method_option(
           :maximum_service_instances,
-          aliases: '-mx',
+          aliases: '-mxs',
           type: :numeric,
           desc: 'The maximum number of service instances to expand to.')
       method_option(
           :minimum_service_instances,
-          aliases: '-mn',
+          aliases: '-mns',
           type: :numeric,
           desc: 'The minimum number of service instances to contract to.')
 
