@@ -6,8 +6,8 @@ require 'date'
 Gem::Specification.new do |spec|
   spec.name = 'rollo'
   spec.version = Rollo::VERSION
-  spec.authors = ['Toby Clemson']
-  spec.email = ['tobyclemson@gmail.com']
+  spec.authors = ['InfraBlocks Maintainers']
+  spec.email = ['maintainers@infrablocks.io']
 
   spec.date = Date.today.to_s
   spec.summary = 'Cluster / service roller for AWS ECS.'
