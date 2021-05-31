@@ -15,9 +15,16 @@ task default: %i[
 ]
 
 namespace :encryption do
+  namespace :directory do
+    desc "Ensure CI secrets directory exists."
+    task :ensure do
+      FileUtils.mkdir_p('config/secrets/ci')
+    end
+  end
+
   namespace :passphrase do
-    desc 'Generate encryption passphrase for CI GPG key'
-    task :generate do
+    desc "Generate encryption passphrase used by CI."
+    task generate: ['directory:ensure'] do
       File.open('config/secrets/ci/encryption.passphrase', 'w') do |f|
         f.write(SecureRandom.base64(36))
       end
@@ -33,15 +40,29 @@ namespace :keys do
     )
   end
 
-  namespace :gpg do
-    RakeGPG.define_generate_key_task(
-      output_directory: 'config/secrets/ci',
-      name_prefix: 'gpg',
-      owner_name: 'InfraBlocks Maintainers',
-      owner_email: 'maintainers@infrablocks.io',
-      owner_comment: 'rollo CI Key'
-    )
+  namespace :secrets do
+    namespace :gpg do
+      RakeGPG.define_generate_key_task(
+        output_directory: 'config/secrets/ci',
+        name_prefix: 'gpg',
+        owner_name: 'InfraBlocks Maintainers',
+        owner_email: 'maintainers@infrablocks.io',
+        owner_comment: 'rollo CI Key'
+      )
+    end
+
+    desc 'Generate key used by CI to access secrets.'
+    task generate: [:'gpg:generate']
   end
+end
+
+namespace :secrets do
+  desc 'Regenerate all generatable secrets.'
+  task regenerate: %w[
+    encryption:passphrase:generate
+    keys:deploy:generate
+    keys:secrets:generate
+  ]
 end
 
 RuboCop::RakeTask.new
