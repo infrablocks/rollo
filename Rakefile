@@ -16,14 +16,14 @@ task default: %i[
 
 namespace :encryption do
   namespace :directory do
-    desc "Ensure CI secrets directory exists."
+    desc 'Ensure CI secrets directory exists.'
     task :ensure do
       FileUtils.mkdir_p('config/secrets/ci')
     end
   end
 
   namespace :passphrase do
-    desc "Generate encryption passphrase used by CI."
+    desc 'Generate encryption passphrase used by CI.'
     task generate: ['directory:ensure'] do
       File.open('config/secrets/ci/encryption.passphrase', 'w') do |f|
         f.write(SecureRandom.base64(36))
