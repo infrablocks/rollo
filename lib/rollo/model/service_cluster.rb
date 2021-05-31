@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'aws-sdk'
 require 'hollerback'
 
@@ -10,7 +12,7 @@ module Rollo
         @region = region
         @ecs_cluster_name = ecs_cluster_name
         @ecs_resource = ecs_resource || Aws::ECS::Resource.new(region: region)
-        @ecs_cluster = get_ecs_cluster
+        @ecs_cluster = ecs_cluster
       end
 
       def name
@@ -18,9 +20,9 @@ module Rollo
       end
 
       def replica_services
-        get_ecs_service_arns
-            .collect {|arn| Service.new(@ecs_cluster_name, arn, @region)}
-            .select(&:is_replica?)
+        ecs_service_arns
+          .collect { |arn| Service.new(@ecs_cluster_name, arn, @region) }
+          .select(&:replica?)
       end
 
       def with_replica_services(&block)
@@ -28,7 +30,8 @@ module Rollo
 
         callbacks = Hollerback::Callbacks.new(block)
         callbacks.try_respond_with(
-            :start, all_replica_services)
+          :start, all_replica_services
+        )
 
         all_replica_services.each do |service|
           callbacks.try_respond_with(:each_service, service)
@@ -37,16 +40,18 @@ module Rollo
 
       private
 
-      def get_ecs_cluster
-        @ecs_resource.client
-            .describe_clusters(clusters: [@ecs_cluster_name])
-            .clusters[0]
+      def ecs_cluster
+        @ecs_resource
+          .client
+          .describe_clusters(clusters: [@ecs_cluster_name])
+          .clusters[0]
       end
 
-      def get_ecs_service_arns
-        @ecs_resource.client
-            .list_services(cluster: @ecs_cluster.cluster_name)
-            .inject([]) {|arns, response| arns + response.service_arns}
+      def ecs_service_arns
+        @ecs_resource
+          .client
+          .list_services(cluster: @ecs_cluster.cluster_name)
+          .inject([]) { |arns, response| arns + response.service_arns }
       end
     end
   end

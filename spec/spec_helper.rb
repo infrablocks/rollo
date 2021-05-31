@@ -1,9 +1,11 @@
-require "bundler/setup"
+# frozen_string_literal: true
+
+require 'bundler/setup'
 require 'aruba/rspec'
-require "rollo"
+require 'rollo'
 
 RSpec.configure do |config|
-  config.example_status_persistence_file_path = ".rspec_status"
+  config.example_status_persistence_file_path = '.rspec_status'
   config.disable_monkey_patching!
   config.expect_with :rspec do |c|
     c.syntax = :expect

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Rollo
   module Model
     class ScalingActivity
@@ -18,14 +20,14 @@ module Rollo
       end
 
       def started_after_completion_of?(other)
-        self.id != other.id &&
-            !self.start_time.nil? &&
-            !other.end_time.nil? &&
-            self.start_time > other.end_time
+        id != other.id &&
+          !start_time.nil? &&
+          !other.end_time.nil? &&
+          start_time > other.end_time
       end
 
-      def is_complete?
-        %w(Successful Failed Cancelled).include?(@activity.status_code)
+      def complete?
+        %w[Successful Failed Cancelled].include?(@activity.status_code)
       end
     end
   end

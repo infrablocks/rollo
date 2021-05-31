@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'aws-sdk'
 require 'hollerback'
 require 'wait'
@@ -14,7 +16,7 @@ module Rollo
         @region = region
         @asg_name = asg_name
         @asg_resource = asg_resource ||
-            Aws::AutoScaling::Resource.new(region: region)
+                        Aws::AutoScaling::Resource.new(region: region)
         @asg = @asg_resource.group(@asg_name)
         record_latest_scaling_activity
 
@@ -34,30 +36,30 @@ module Rollo
       end
 
       def desired_capacity=(capacity)
-        @asg.set_desired_capacity({desired_capacity: capacity})
+        @asg.set_desired_capacity({ desired_capacity: capacity })
       end
 
-      def has_desired_capacity?
+      def desired_capacity?
         hosts.size == desired_capacity &&
-            hosts.all? {|h| h.is_in_service? && h.is_healthy?}
+          hosts.all? { |h| h.in_service? && h.healthy? }
       end
 
       def scaling_activities
-        @asg.activities.collect {|a| ScalingActivity.new(a)}
+        @asg.activities.collect { |a| ScalingActivity.new(a) }
       end
 
-      def has_started_changing_capacity?
+      def started_changing_capacity?
         scaling_activities
-            .select {|a| a.started_after_completion_of?(@last_scaling_activity)}
-            .size > 0
+          .select { |a| a.started_after_completion_of?(@last_scaling_activity) }
+          .size.positive?
       end
 
-      def has_completed_changing_capacity?
-        scaling_activities.all?(&:is_complete?)
+      def completed_changing_capacity?
+        scaling_activities.all?(&:complete?)
       end
 
       def hosts
-        @asg.instances.collect {|h| Host.new(h)}
+        @asg.instances.collect { |h| Host.new(h) }
       end
 
       def increase_capacity_by(capacity_delta, &block)
@@ -65,7 +67,8 @@ module Rollo
         increased = initial + capacity_delta
 
         callbacks_for(block).try_respond_with(
-            :prepare, initial, increased)
+          :prepare, initial, increased
+        )
 
         ensure_capacity_changed_to(increased, &block)
       end
@@ -75,7 +78,8 @@ module Rollo
         decreased = initial - capacity_delta
 
         callbacks_for(block).try_respond_with(
-            :prepare, initial, decreased)
+          :prepare, initial, decreased
+        )
 
         ensure_capacity_changed_to(decreased, &block)
       end
@@ -91,27 +95,33 @@ module Rollo
       def wait_for_capacity_change_start(&block)
         @waiter.until do |attempt|
           reload
-          callbacks_for(block)
-              .try_respond_with(:waiting_for_start, attempt) if block
-          has_started_changing_capacity?
+          if block
+            callbacks_for(block)
+              .try_respond_with(:waiting_for_start, attempt)
+          end
+          started_changing_capacity?
         end
       end
 
       def wait_for_capacity_change_end(&block)
         @waiter.until do |attempt|
           reload
-          callbacks_for(block)
-              .try_respond_with(:waiting_for_end, attempt) if block
-          has_completed_changing_capacity?
+          if block
+            callbacks_for(block)
+              .try_respond_with(:waiting_for_end, attempt)
+          end
+          completed_changing_capacity?
         end
       end
 
       def wait_for_capacity_health(&block)
         @waiter.until do |attempt|
           reload
-          callbacks_for(block)
-              .try_respond_with(:waiting_for_health, attempt) if block
-          has_desired_capacity?
+          if block
+            callbacks_for(block)
+              .try_respond_with(:waiting_for_health, attempt)
+          end
+          desired_capacity?
         end
       end
 

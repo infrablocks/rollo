@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Rollo
   module Model
     class Host
@@ -13,11 +15,11 @@ module Rollo
         @instance.terminate(should_decrement_desired_capacity: false)
       end
 
-      def is_in_service?
+      def in_service?
         @instance.lifecycle_state == 'InService'
       end
 
-      def is_healthy?
+      def healthy?
         @instance.health_status == 'Healthy'
       end
     end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'aws-sdk'
 require 'wait'
 require 'hollerback'
@@ -6,8 +8,9 @@ module Rollo
   module Model
     class Service
       def initialize(
-          ecs_cluster_name, ecs_service_arn, region,
-              ecs_resource = nil, waiter = nil)
+        ecs_cluster_name, ecs_service_arn, region,
+        ecs_resource = nil, waiter = nil
+      )
         @ecs_cluster_name = ecs_cluster_name
         @ecs_service_arn = ecs_service_arn
         @ecs_resource = ecs_resource || Aws::ECS::Resource.new(region: region)
@@ -25,10 +28,10 @@ module Rollo
       end
 
       def reload
-        @ecs_service = get_ecs_service
+        @ecs_service = ecs_service
       end
 
-      def is_replica?
+      def replica?
         @ecs_service.scheduling_strategy == 'REPLICA'
       end
 
@@ -42,13 +45,14 @@ module Rollo
 
       def desired_count=(count)
         @ecs_resource.client
-            .update_service(
-                cluster: @ecs_cluster_name,
-                service: @ecs_service_arn,
-                desired_count: count)
+                     .update_service(
+                       cluster: @ecs_cluster_name,
+                       service: @ecs_service_arn,
+                       desired_count: count
+                     )
       end
 
-      def has_desired_count?
+      def desired_count_met?
         running_count == desired_count
       end
 
@@ -59,7 +63,8 @@ module Rollo
         target = [increased, maximum].min
 
         callbacks_for(block).try_respond_with(
-            :prepare, initial, target)
+          :prepare, initial, target
+        )
 
         ensure_instance_count(target, &block)
       end
@@ -71,7 +76,8 @@ module Rollo
         target = [decreased, minimum].max
 
         callbacks_for(block).try_respond_with(
-            :prepare, initial, target)
+          :prepare, initial, target
+        )
 
         ensure_instance_count(target, &block)
       end
@@ -84,20 +90,23 @@ module Rollo
       def wait_for_service_health(&block)
         @waiter.until do |attempt|
           reload
-          callbacks_for(block)
-              .try_respond_with(:waiting_for_health, attempt) if block
-          has_desired_count?
+          if block
+            callbacks_for(block)
+              .try_respond_with(:waiting_for_health, attempt)
+          end
+          desired_count_met?
         end
       end
 
       private
 
-      def get_ecs_service
+      def ecs_service
         @ecs_resource.client
-            .describe_services(
-                cluster: @ecs_cluster_name,
-                services: [@ecs_service_arn])
-            .services[0]
+                     .describe_services(
+                       cluster: @ecs_cluster_name,
+                       services: [@ecs_service_arn]
+                     )
+                     .services[0]
       end
 
       def callbacks_for(block)
