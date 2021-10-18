@@ -40,19 +40,19 @@ module Rollo
             on.prepare do |current, target|
               say(
                 "Changing desired capacity from #{current} to " \
-                    "#{target}..."
+                "#{target}..."
               )
             end
             on.waiting_for_start do |attempt|
               say(
                 'Waiting for capacity change to start ' \
-                    "(attempt #{attempt})..."
+                "(attempt #{attempt})..."
               )
             end
             on.waiting_for_end do |attempt|
               say(
                 'Waiting for capacity change to complete ' \
-                    "(attempt #{attempt})..."
+                "(attempt #{attempt})..."
               )
             end
             on.waiting_for_health do |attempt|
@@ -97,25 +97,25 @@ module Rollo
             on.prepare do |current, target|
               say(
                 "Changing desired capacity from #{current} to " \
-                    "#{target}..."
+                "#{target}..."
               )
             end
             on.waiting_for_start do |attempt|
               say(
                 'Waiting for capacity change to start ' \
-                    "(attempt #{attempt})..."
+                "(attempt #{attempt})..."
               )
             end
             on.waiting_for_end do |attempt|
               say(
                 'Waiting for capacity change to complete ' \
-                    "(attempt #{attempt})..."
+                "(attempt #{attempt})..."
               )
             end
             on.waiting_for_health do |attempt|
               say(
                 'Waiting for host cluster to reach healthy state ' \
-                    "(attempt #{attempt})..."
+                "(attempt #{attempt})..."
               )
             end
           end
@@ -125,7 +125,7 @@ module Rollo
                 on.waiting_for_health do |attempt|
                   say(
                     "Waiting for service #{service.name} to reach a " \
-                        "steady state (attempt #{attempt})..."
+                    "steady state (attempt #{attempt})..."
                   )
                 end
               end
@@ -178,22 +178,22 @@ module Rollo
 
         say(
           'Terminating old hosts in host cluster in batches of ' \
-              "#{batch_size}..."
+          "#{batch_size}..."
         )
         # rubocop:disable Metrics/BlockLength
         with_padding do
           host_batches.each_with_index do |host_batch, index|
             say(
               "Batch #{index + 1} contains hosts: " \
-                  "\n\t\t[#{host_batch.map(&:id).join(",\n\t\t ")}]\n" \
-                  'Terminating...'
+              "\n\t\t[#{host_batch.map(&:id).join(",\n\t\t ")}]\n" \
+              'Terminating...'
             )
             host_batch.each(&:terminate)
             host_cluster.wait_for_capacity_health do |on|
               on.waiting_for_health do |attempt|
                 say(
                   'Waiting for host cluster to reach healthy state ' \
-                      "(attempt #{attempt})"
+                  "(attempt #{attempt})"
                 )
               end
             end
@@ -203,7 +203,7 @@ module Rollo
                   on.waiting_for_health do |attempt|
                     say(
                       "Waiting for service #{service.name} to reach a " \
-                          "steady state (attempt #{attempt})..."
+                      "steady state (attempt #{attempt})..."
                     )
                   end
                 end
@@ -211,12 +211,12 @@ module Rollo
             end
             say(
               "Waiting #{service_start_wait_minutes} minute(s) for " \
-                  'services to finish starting...'
+              'services to finish starting...'
             )
             sleep(service_start_wait_seconds)
             say(
               "Waited #{service_start_wait_minutes} minute(s). " \
-                  'Continuing...'
+              'Continuing...'
             )
           end
         end

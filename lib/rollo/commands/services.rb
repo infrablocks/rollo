@@ -58,13 +58,13 @@ module Rollo
             on.start do |services|
               say(
                 'Service cluster contains services:' \
-                    "\n\t\t[#{services.map(&:name).join(",\n\t\t ")}]"
+                "\n\t\t[#{services.map(&:name).join(",\n\t\t ")}]"
               )
             end
             on.each_service do |service|
               say(
                 "Increasing instance count by #{batch_size} " \
-                    "for #{service.name}"
+                "for #{service.name}"
               )
               # rubocop:disable Lint/ShadowingOuterLocalVariable
               with_padding do
@@ -74,13 +74,13 @@ module Rollo
                   on.prepare do |current, target|
                     say(
                       "Changing instance count from #{current} " \
-                          "to #{target}..."
+                      "to #{target}..."
                     )
                   end
                   on.waiting_for_health do |attempt|
                     say(
                       'Waiting for service to reach a steady state ' \
-                          "(attempt #{attempt})..."
+                      "(attempt #{attempt})..."
                     )
                   end
                 end
@@ -92,13 +92,13 @@ module Rollo
         # rubocop:enable Metrics/BlockLength
         say(
           "Waiting #{service_start_wait_minutes} minute(s) for " \
-              'services to finish starting...'
+          'services to finish starting...'
         )
         with_padding do
           sleep(service_start_wait_seconds)
           say(
             "Waited #{service_start_wait_minutes} minute(s). " \
-                'Continuing...'
+            'Continuing...'
           )
         end
         say('Service instance counts increased, continuing...')
@@ -140,7 +140,7 @@ module Rollo
             on.each_service do |service|
               say(
                 "Decreasing instance count by #{batch_size} " \
-                    "for #{service.name}"
+                "for #{service.name}"
               )
               # rubocop:disable Lint/ShadowingOuterLocalVariable
               with_padding do
@@ -148,13 +148,13 @@ module Rollo
                   on.prepare do |current, target|
                     say(
                       "Changing instance count from #{current} " \
-                          "to #{target}..."
+                      "to #{target}..."
                     )
                   end
                   on.waiting_for_health do |attempt|
                     say(
                       'Waiting for service to reach a steady state ' \
-                          "(attempt #{attempt})..."
+                      "(attempt #{attempt})..."
                     )
                   end
                 end

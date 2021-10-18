@@ -34,7 +34,7 @@ module Rollo
         default: 3,
         desc:
             'The number of hosts / service instances to add / remove at ' \
-                'a time.'
+            'a time.'
       )
       method_option(
         :maximum_service_instances,
@@ -59,7 +59,7 @@ module Rollo
 
         say(
           "Rolling instances in host cluster #{host_cluster.name} for " \
-              "service cluster #{service_cluster.name}..."
+          "service cluster #{service_cluster.name}..."
         )
         # rubocop:disable Metrics/BlockLength
         with_padding do

@@ -40,8 +40,8 @@ RSpec.describe Rollo::Model::ScalingActivity do
   end
 
   it('started after other if they have different IDs, it has a start time ' \
-      'and the other has an end time and the start time is after the ' \
-      'end time') do
+     'and the other has an end time and the start time is after the ' \
+     'end time') do
     region = 'eu-west-2'
 
     activity1_end_time = Time.now - 30
@@ -124,7 +124,7 @@ RSpec.describe Rollo::Model::ScalingActivity do
   end
 
   it('did not start after other if end time of other is after its ' \
-      'start time') do
+     'start time') do
     region = 'eu-west-2'
 
     activity1_end_time = Time.now + 30

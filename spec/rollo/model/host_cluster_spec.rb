@@ -270,7 +270,7 @@ RSpec.describe Rollo::Model::HostCluster do
 
   describe '#desired_capacity?' do
     it('returns true when the number of hosts equals the desired capacity ' \
-        'and all hosts are healthy and in service') do
+       'and all hosts are healthy and in service') do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
 
@@ -319,7 +319,7 @@ RSpec.describe Rollo::Model::HostCluster do
     end
 
     it('returns false when the number of hosts does not equal the ' \
-        'desired capacity') do
+       'desired capacity') do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
 
@@ -454,7 +454,7 @@ RSpec.describe Rollo::Model::HostCluster do
 
   describe '#started_changing_capacity?' do
     it('returns true when there is a scaling activity that started after ' \
-        'the last recorded completed activity') do
+       'the last recorded completed activity') do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
 
@@ -523,7 +523,7 @@ RSpec.describe Rollo::Model::HostCluster do
     end
 
     it('returns false when no scaling activity has started since ' \
-        'the last recorded completed activity') do
+       'the last recorded completed activity') do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
 
@@ -826,7 +826,7 @@ RSpec.describe Rollo::Model::HostCluster do
     end
 
     it('raises exception if no capacity change happens within the specified ' \
-        'number of attempts') do
+       'number of attempts') do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
 
@@ -1112,7 +1112,7 @@ RSpec.describe Rollo::Model::HostCluster do
     end
 
     it('raises exception if the capacity change does not complete within the ' \
-        'specified number of attempts') do
+       'specified number of attempts') do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
 
@@ -1425,7 +1425,7 @@ RSpec.describe Rollo::Model::HostCluster do
     end
 
     it('raises exception if the capacity change does not complete within the ' \
-        'specified number of attempts') do
+       'specified number of attempts') do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
 

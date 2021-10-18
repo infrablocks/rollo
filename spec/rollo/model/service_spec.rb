@@ -282,7 +282,7 @@ RSpec.describe Rollo::Model::Service do
 
   describe '#increase_instance_count_by' do
     it('increases the desired count by the requested amount and waits for ' \
-        'the service to become healthy') do
+       'the service to become healthy') do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
@@ -435,7 +435,7 @@ RSpec.describe Rollo::Model::Service do
 
   describe '#decrease_instance_count_by' do
     it('decreases the desired count by the requested amount and waits for ' \
-        'the service to become healthy') do
+       'the service to become healthy') do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
       ecs_service_arn = 'aws:1234:ecs-service/some-ecs-service-name'
