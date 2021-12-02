@@ -5,7 +5,7 @@ PATH
       aws-sdk (~> 3.0)
       aws-sdk-ecs (~> 1.22)
       hollerback (~> 0.1)
-      thor (~> 0.20)
+      thor (>= 0.20, < 2.0)
       wait (~> 0.5)
 
 GEM
@@ -1378,7 +1378,7 @@ GEM
     sshkey (2.0.0)
     sys-uname (1.2.2)
       ffi (~> 1.1)
-    thor (0.20.3)
+    thor (1.1.0)
     tzinfo (2.0.4)
       concurrent-ruby (~> 1.0)
     unicode-display_width (2.1.0)

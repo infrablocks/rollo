@@ -39,7 +39,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'aws-sdk', '~> 3.0'
   spec.add_dependency 'aws-sdk-ecs', '~> 1.22'
   spec.add_dependency 'hollerback', '~> 0.1'
-  spec.add_dependency 'thor', '~> 0.20'
+  spec.add_dependency 'thor', '>= 0.20', '< 2.0'
   spec.add_dependency 'wait', '~> 0.5'
 
   spec.add_development_dependency 'aruba', '~> 0.14'
