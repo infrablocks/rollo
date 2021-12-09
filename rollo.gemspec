@@ -45,7 +45,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'aruba', '~> 0.14'
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'gem-release', '~> 2.0'
-  spec.add_development_dependency 'irbtools', '~> 2.2'
+  spec.add_development_dependency 'irbtools', '~> 3.0'
   spec.add_development_dependency 'rake', '~> 13.0'
   spec.add_development_dependency 'rake_circle_ci', '~> 0.9'
   spec.add_development_dependency 'rake_github', '~> 0.5'
