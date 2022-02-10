@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rollo (0.8.0.pre.2)
+    rollo (0.8.0.pre.3)
       aws-sdk (~> 3.0)
       aws-sdk-ecs (~> 1.22)
       hollerback (~> 0.1)
@@ -1416,4 +1416,4 @@ DEPENDENCIES
   simplecov (~> 0.21)
 
 BUNDLED WITH
-   2.3.6
+   2.3.7
