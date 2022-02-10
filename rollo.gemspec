@@ -42,7 +42,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'thor', '>= 0.20', '< 2.0'
   spec.add_dependency 'wait', '~> 0.5'
 
-  spec.add_development_dependency 'aruba', '~> 0.14'
+  spec.add_development_dependency 'aruba', '~> 2.0'
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'gem-release', '~> 2.0'
   spec.add_development_dependency 'irbtools', '~> 3.0'
