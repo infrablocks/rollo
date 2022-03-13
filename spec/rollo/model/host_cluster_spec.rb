@@ -519,7 +519,7 @@ RSpec.describe Rollo::Model::HostCluster do
         asg_name, region, as_resource
       )
 
-      expect(host_cluster.started_changing_capacity?).to(eq(true))
+      expect(host_cluster.started_changing_capacity?).to(be(true))
     end
 
     it('returns false when no scaling activity has started since ' \
@@ -579,7 +579,7 @@ RSpec.describe Rollo::Model::HostCluster do
         asg_name, region, as_resource
       )
 
-      expect(host_cluster.started_changing_capacity?).to(eq(false))
+      expect(host_cluster.started_changing_capacity?).to(be(false))
     end
   end
 
@@ -654,7 +654,7 @@ RSpec.describe Rollo::Model::HostCluster do
         asg_name, region, as_resource
       )
 
-      expect(host_cluster.completed_changing_capacity?).to(eq(true))
+      expect(host_cluster.completed_changing_capacity?).to(be(true))
     end
 
     it 'returns false when any scaling activity is incomplete' do
@@ -727,7 +727,7 @@ RSpec.describe Rollo::Model::HostCluster do
         asg_name, region, as_resource
       )
 
-      expect(host_cluster.completed_changing_capacity?).to(eq(false))
+      expect(host_cluster.completed_changing_capacity?).to(be(false))
     end
   end
 

@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 RSpec.describe 'rollo version', type: :aruba do
-  before { run('rollo hosts help') }
+  before { run_command('rollo hosts help') }
 
   it {
     expect(last_command_started)
