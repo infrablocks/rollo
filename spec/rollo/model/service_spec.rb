@@ -4,6 +4,7 @@ require_relative '../../spec_helper'
 
 RSpec.describe Rollo::Model::Service do
   describe 'attributes' do
+    # rubocop:disable RSpec/MultipleExpectations
     it 'exposes the underlying ECS service name' do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
@@ -27,6 +28,7 @@ RSpec.describe Rollo::Model::Service do
         .to(eq(cluster: ecs_cluster_name, services: [ecs_service_arn]))
       expect(service.name).to(eq(ecs_service_name))
     end
+    # rubocop:enable RSpec/MultipleExpectations
 
     it 'exposes the running count from the underlying ECS service' do
       region = 'eu-west-1'
@@ -178,6 +180,7 @@ RSpec.describe Rollo::Model::Service do
   end
 
   describe '#reload' do
+    # rubocop:disable RSpec/MultipleExpectations
     it 'reloads the underlying ECS service' do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
@@ -202,9 +205,11 @@ RSpec.describe Rollo::Model::Service do
       expect(service.instance.running_count).to(eq(6))
       expect(service.instance.desired_count).to(eq(9))
     end
+    # rubocop:enable RSpec/MultipleExpectations
   end
 
   describe '#ensure_desired_count' do
+    # rubocop:disable RSpec/MultipleExpectations
     it 'sets desired count and waits for the service to become healthy' do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
@@ -246,6 +251,7 @@ RSpec.describe Rollo::Model::Service do
                  { cluster: ecs_cluster_name, services: [ecs_service_arn] }
                ]))
     end
+    # rubocop:enable RSpec/MultipleExpectations
 
     it 'reports health check attempts using the provided block' do
       region = 'eu-west-1'
@@ -281,6 +287,7 @@ RSpec.describe Rollo::Model::Service do
   end
 
   describe '#increase_instance_count_by' do
+    # rubocop:disable RSpec/MultipleExpectations
     it('increases the desired count by the requested amount and waits for ' \
        'the service to become healthy') do
       region = 'eu-west-1'
@@ -323,7 +330,9 @@ RSpec.describe Rollo::Model::Service do
                  { cluster: ecs_cluster_name, services: [ecs_service_arn] }
                ]))
     end
+    # rubocop:enable RSpec/MultipleExpectations
 
+    # rubocop:disable RSpec/MultipleExpectations
     it('honours the specified maximum capacity when supplied') do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
@@ -367,6 +376,7 @@ RSpec.describe Rollo::Model::Service do
                  { cluster: ecs_cluster_name, services: [ecs_service_arn] }
                ]))
     end
+    # rubocop:enable RSpec/MultipleExpectations
 
     it 'reports on start of instance count change using provided block' do
       region = 'eu-west-1'
@@ -434,6 +444,7 @@ RSpec.describe Rollo::Model::Service do
   end
 
   describe '#decrease_instance_count_by' do
+    # rubocop:disable RSpec/MultipleExpectations
     it('decreases the desired count by the requested amount and waits for ' \
        'the service to become healthy') do
       region = 'eu-west-1'
@@ -476,7 +487,9 @@ RSpec.describe Rollo::Model::Service do
                  { cluster: ecs_cluster_name, services: [ecs_service_arn] }
                ]))
     end
+    # rubocop:enable RSpec/MultipleExpectations
 
+    # rubocop:disable RSpec/MultipleExpectations
     it('honours the specified minimum capacity when supplied') do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
@@ -520,6 +533,7 @@ RSpec.describe Rollo::Model::Service do
                  { cluster: ecs_cluster_name, services: [ecs_service_arn] }
                ]))
     end
+    # rubocop:enable RSpec/MultipleExpectations
 
     it 'reports on start of instance count change using provided block' do
       region = 'eu-west-1'

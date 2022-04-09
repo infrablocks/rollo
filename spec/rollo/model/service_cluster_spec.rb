@@ -7,6 +7,7 @@ require_relative '../../spec_helper'
 # rubocop:disable RSpec/VerifiedDoubles
 RSpec.describe Rollo::Model::ServiceCluster do
   describe 'attributes' do
+    # rubocop:disable RSpec/MultipleExpectations
     it 'exposes the ECS cluster name' do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
@@ -27,7 +28,9 @@ RSpec.describe Rollo::Model::ServiceCluster do
           .first[:params]).to(eq(clusters: [ecs_cluster_name]))
       expect(service_cluster.name).to(eq(ecs_cluster_name))
     end
+    # rubocop:enable RSpec/MultipleExpectations
 
+    # rubocop:disable RSpec/MultipleExpectations
     it 'exposes the replica services in the ECS cluster' do
       region = 'eu-west-1'
       ecs_cluster_name = 'some-ecs-cluster'
@@ -94,6 +97,7 @@ RSpec.describe Rollo::Model::ServiceCluster do
                ]))
       expect(replica_services).to(eq([service1, service3]))
     end
+    # rubocop:enable RSpec/MultipleExpectations
   end
 
   describe '#with_replica_services' do

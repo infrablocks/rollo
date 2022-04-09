@@ -9,14 +9,14 @@ files = %w[
   bin
   lib
   CODE_OF_CONDUCT.md
-  rake_terraform.gemspec
+  rollo.gemspec
   Gemfile
   LICENSE.txt
   Rakefile
   README.md
 ]
 
-Gem::Specification.new do |spec| # rubocop:disable Gemspec/RequireMFA
+Gem::Specification.new do |spec|
   spec.name = 'rollo'
   spec.version = Rollo::VERSION
   spec.authors = ['InfraBlocks Maintainers']
@@ -56,4 +56,6 @@ Gem::Specification.new do |spec| # rubocop:disable Gemspec/RequireMFA
   spec.add_development_dependency 'rubocop-rake'
   spec.add_development_dependency 'rubocop-rspec'
   spec.add_development_dependency 'simplecov'
+
+  spec.metadata['rubygems_mfa_required'] = 'false'
 end

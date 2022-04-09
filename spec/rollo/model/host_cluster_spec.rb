@@ -66,6 +66,7 @@ RSpec.describe Rollo::Model::HostCluster do
       expect(host_cluster.name).to(eq(asg_name))
     end
 
+    # rubocop:disable RSpec/MultipleExpectations
     it 'exposes the desired capacity of the underlying auto scaling group' do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
@@ -95,7 +96,9 @@ RSpec.describe Rollo::Model::HostCluster do
         .to(eq({ auto_scaling_group_names: [asg_name] }))
       expect(desired_capacity).to(eq(6))
     end
+    # rubocop:enable RSpec/MultipleExpectations
 
+    # rubocop:disable RSpec/MultipleExpectations
     it 'exposes the scaling activities of the underlying auto scaling group' do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
@@ -146,7 +149,9 @@ RSpec.describe Rollo::Model::HostCluster do
       expect(scaling_activities)
         .to(eq([scaling_activity1, scaling_activity2]))
     end
+    # rubocop:enable RSpec/MultipleExpectations
 
+    # rubocop:disable RSpec/MultipleExpectations
     it 'exposes the hosts in the underlying auto scaling group' do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
@@ -199,9 +204,11 @@ RSpec.describe Rollo::Model::HostCluster do
                ]))
       expect(hosts).to(eq([host1, host2]))
     end
+    # rubocop:enable RSpec/MultipleExpectations
   end
 
   describe '#reload' do
+    # rubocop:disable RSpec/MultipleExpectations
     it 'reloads the underlying auto scaling group' do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
@@ -242,6 +249,7 @@ RSpec.describe Rollo::Model::HostCluster do
       expect(initial_desired_capacity).to(eq(6))
       expect(updated_desired_capacity).to(eq(9))
     end
+    # rubocop:enable RSpec/MultipleExpectations
   end
 
   describe '#desired_capacity=' do
@@ -2201,6 +2209,7 @@ RSpec.describe Rollo::Model::HostCluster do
       expect(found_completed_check_attempts).to(eq([1, 2]))
     end
 
+    # rubocop:disable RSpec/MultipleExpectations
     it 'records the last scaling activity' do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
@@ -2316,6 +2325,7 @@ RSpec.describe Rollo::Model::HostCluster do
       expect(host_cluster.last_scaling_activity.id)
         .to(eq(activity2_id))
     end
+    # rubocop:enable RSpec/MultipleExpectations
   end
 
   describe '#increase_capacity_by' do
@@ -3031,6 +3041,7 @@ RSpec.describe Rollo::Model::HostCluster do
       expect(found_completed_check_attempts).to(eq([1, 2]))
     end
 
+    # rubocop:disable RSpec/MultipleExpectations
     it 'records the last scaling activity' do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
@@ -3146,6 +3157,7 @@ RSpec.describe Rollo::Model::HostCluster do
       expect(host_cluster.last_scaling_activity.id)
         .to(eq(activity2_id))
     end
+    # rubocop:enable RSpec/MultipleExpectations
   end
 
   describe '#decrease_capacity_by' do
@@ -3871,6 +3883,7 @@ RSpec.describe Rollo::Model::HostCluster do
       expect(found_completed_check_attempts).to(eq([1, 2]))
     end
 
+    # rubocop:disable RSpec/MultipleExpectations
     it 'records the last scaling activity' do
       region = 'eu-west-1'
       asg_name = 'some-auto-scaling-group'
@@ -3986,6 +3999,7 @@ RSpec.describe Rollo::Model::HostCluster do
       expect(host_cluster.last_scaling_activity.id)
         .to(eq(activity2_id))
     end
+    # rubocop:enable RSpec/MultipleExpectations
   end
 end
 # rubocop:enable RSpec/ExampleLength
