@@ -167,7 +167,7 @@ module Rollo
         batch_size = options[:batch_size]
 
         service_start_wait_minutes = options[:startup_time]
-        service_start_wait_seconds = 60 * service_start_wait_minutes
+        service_start_wait_seconds = service_start_wait_minutes * 60
 
         host_cluster ||= Rollo::Model::HostCluster.new(asg_name, region)
         service_cluster ||= Rollo::Model::ServiceCluster.new(ecs_cluster_name,
