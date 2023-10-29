@@ -4,8 +4,8 @@ require 'aws-sdk'
 require 'hollerback'
 require 'wait'
 
-require_relative './scaling_activity'
-require_relative './host'
+require_relative 'scaling_activity'
+require_relative 'host'
 
 module Rollo
   module Model

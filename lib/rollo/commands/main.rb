@@ -2,8 +2,8 @@
 
 require 'thor'
 require_relative '../model'
-require_relative './hosts'
-require_relative './services'
+require_relative 'hosts'
+require_relative 'services'
 
 module Rollo
   module Commands

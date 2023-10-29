@@ -3,7 +3,7 @@
 require 'aws-sdk'
 require 'hollerback'
 
-require_relative './service'
+require_relative 'service'
 
 module Rollo
   module Model
