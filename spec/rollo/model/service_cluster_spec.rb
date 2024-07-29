@@ -51,7 +51,7 @@ RSpec.describe Rollo::Model::ServiceCluster do
         [
           {
             service_arns: [ecs_service_arn1, ecs_service_arn2],
-            next_token: next_token
+            next_token:
           },
           {
             service_arns: [ecs_service_arn3],
@@ -93,7 +93,7 @@ RSpec.describe Rollo::Model::ServiceCluster do
           .map { |r| r[:params] })
         .to(eq([
                  { cluster: ecs_cluster_name },
-                 { cluster: ecs_cluster_name, next_token: next_token }
+                 { cluster: ecs_cluster_name, next_token: }
                ]))
       expect(replica_services).to(eq([service1, service3]))
     end
@@ -121,7 +121,7 @@ RSpec.describe Rollo::Model::ServiceCluster do
         [
           {
             service_arns: [ecs_service_arn1, ecs_service_arn2],
-            next_token: next_token
+            next_token:
           },
           {
             service_arns: [ecs_service_arn3],
@@ -189,7 +189,7 @@ RSpec.describe Rollo::Model::ServiceCluster do
         [
           {
             service_arns: [ecs_service_arn1, ecs_service_arn2],
-            next_token: next_token
+            next_token:
           },
           {
             service_arns: [ecs_service_arn3],

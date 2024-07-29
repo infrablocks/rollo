@@ -16,7 +16,7 @@ module Rollo
         @region = region
         @asg_name = asg_name
         @asg_resource = asg_resource ||
-                        Aws::AutoScaling::Resource.new(region: region)
+                        Aws::AutoScaling::Resource.new(region:)
         @asg = @asg_resource.group(@asg_name)
         record_latest_scaling_activity
 
@@ -84,11 +84,11 @@ module Rollo
         ensure_capacity_changed_to(decreased, &block)
       end
 
-      def ensure_capacity_changed_to(capacity, &block)
+      def ensure_capacity_changed_to(capacity, &)
         self.desired_capacity = capacity
-        wait_for_capacity_change_start(&block)
-        wait_for_capacity_change_end(&block)
-        wait_for_capacity_health(&block)
+        wait_for_capacity_change_start(&)
+        wait_for_capacity_change_end(&)
+        wait_for_capacity_health(&)
         record_latest_scaling_activity
       end
 

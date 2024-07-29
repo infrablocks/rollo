@@ -13,7 +13,7 @@ module Rollo
       )
         @ecs_cluster_name = ecs_cluster_name
         @ecs_service_arn = ecs_service_arn
-        @ecs_resource = ecs_resource || Aws::ECS::Resource.new(region: region)
+        @ecs_resource = ecs_resource || Aws::ECS::Resource.new(region:)
         reload
 
         @waiter = waiter || Wait.new(attempts: 720, timeout: 30, delay: 5)
@@ -82,9 +82,9 @@ module Rollo
         ensure_instance_count(target, &block)
       end
 
-      def ensure_instance_count(count, &block)
+      def ensure_instance_count(count, &)
         self.desired_count = count
-        wait_for_service_health(&block)
+        wait_for_service_health(&)
       end
 
       def wait_for_service_health(&block)

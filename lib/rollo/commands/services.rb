@@ -69,7 +69,7 @@ module Rollo
               # rubocop:disable Lint/ShadowingOuterLocalVariable
               with_padding do
                 service.increase_instance_count_by(
-                  batch_size, maximum_instances: maximum_instances
+                  batch_size, maximum_instances:
                 ) do |on|
                   on.prepare do |current, target|
                     say(

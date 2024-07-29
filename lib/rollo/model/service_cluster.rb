@@ -11,7 +11,7 @@ module Rollo
       def initialize(ecs_cluster_name, region, ecs_resource = nil)
         @region = region
         @ecs_cluster_name = ecs_cluster_name
-        @ecs_resource = ecs_resource || Aws::ECS::Resource.new(region: region)
+        @ecs_resource = ecs_resource || Aws::ECS::Resource.new(region:)
         @ecs_cluster = ecs_cluster
       end
 

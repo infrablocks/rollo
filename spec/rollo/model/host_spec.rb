@@ -8,7 +8,7 @@ RSpec.describe Rollo::Model::Host do
     group_name = 'some-auto-scaling-group'
     instance_id = 'i-002b8e107dc646e5b'
     instance = Aws::AutoScaling::Instance.new(
-      group_name, instance_id, region: region
+      group_name, instance_id, region:
     )
 
     host = described_class.new(instance)
@@ -21,7 +21,7 @@ RSpec.describe Rollo::Model::Host do
     group_name = 'some-auto-scaling-group'
     instance_id = 'i-002b8e107dc646e5b'
     instance = Aws::AutoScaling::Instance.new(
-      group_name, instance_id, region: region
+      group_name, instance_id, region:
     )
     allow(instance).to(receive(:terminate))
 
@@ -39,7 +39,7 @@ RSpec.describe Rollo::Model::Host do
     instance_id = 'i-002b8e107dc646e5b'
     instance = Aws::AutoScaling::Instance.new(
       group_name, instance_id,
-      region: region, data: { lifecycle_state: 'InService' }
+      region:, data: { lifecycle_state: 'InService' }
     )
 
     host = described_class.new(instance)
@@ -53,7 +53,7 @@ RSpec.describe Rollo::Model::Host do
     instance_id = 'i-002b8e107dc646e5b'
     instance = Aws::AutoScaling::Instance.new(
       group_name, instance_id,
-      region: region, data: { lifecycle_state: 'Terminated' }
+      region:, data: { lifecycle_state: 'Terminated' }
     )
 
     host = described_class.new(instance)
@@ -67,7 +67,7 @@ RSpec.describe Rollo::Model::Host do
     instance_id = 'i-002b8e107dc646e5b'
     instance = Aws::AutoScaling::Instance.new(
       group_name, instance_id,
-      region: region, data: { health_status: 'Healthy' }
+      region:, data: { health_status: 'Healthy' }
     )
 
     host = described_class.new(instance)
@@ -82,7 +82,7 @@ RSpec.describe Rollo::Model::Host do
     instance_id = 'i-002b8e107dc646e5b'
     instance = Aws::AutoScaling::Instance.new(
       group_name, instance_id,
-      region: region, data: { health_status: 'Unhealthy' }
+      region:, data: { health_status: 'Unhealthy' }
     )
 
     host = described_class.new(instance)
