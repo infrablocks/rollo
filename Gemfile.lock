@@ -1805,7 +1805,7 @@ GEM
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (2.6.0)
-    uri (0.13.0)
+    uri (0.13.2)
     wait (0.5.3)
     wirb (2.2.2)
       paint (>= 0.9, < 3.0)
